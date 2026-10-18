@@ -1,3 +1,4 @@
+import { categoryPath } from './catalog';
 import type { CartPreview, SiteConfig } from '@/types/site';
 
 // Stage 3 will replace these mock values with confirmed API data.
@@ -5,9 +6,9 @@ export const siteConfig: SiteConfig = {
   name: 'Pots & Planters',
   navigation: [
     { label: 'Main', href: '/' },
-    { label: 'Outdoor Pots', href: '/catalogues' },
-    { label: 'Indoor Pots', href: '/catalogues' },
-    { label: 'Artificial Plants & Trees', href: '/catalogues' },
+    { label: 'Outdoor Pots', href: categoryPath('outdoor') },
+    { label: 'Indoor Pots', href: categoryPath('indoor') },
+    { label: 'Artificial Plants & Trees', href: categoryPath('artificial') },
     { label: 'Catalogues', href: '/catalogues' },
     { label: 'Contacts', href: '#contacts' },
   ],

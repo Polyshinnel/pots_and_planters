@@ -8,9 +8,16 @@ export interface ProductPreview {
   id: string;
   slug: string;
   name: string;
+  specifications?: ProductSpecifications;
   sku?: string;
   image: HomeImage | null;
   price: { amount: number; currency: 'AED' } | null;
+}
+
+export interface ProductSpecifications {
+  diameterCm?: number;
+  heightCm?: number;
+  finish?: string;
 }
 
 export interface HomeCategory {

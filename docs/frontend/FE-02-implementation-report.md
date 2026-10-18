@@ -57,7 +57,7 @@ Header/Footer/SiteShell/FloatingActions/Brand, Mantine theme, site config и glo
 - `frontend/src/data/home.mock.ts` — тексты, категории, четыре товара, решения, каталоги, выборка Inspiration. Данные можно заменить API adapter на следующем этапе.
 - `frontend/src/lib/project-contact.ts` — общий destination/fallback и контекст WhatsApp.
 - `frontend/src/components/home/HomeSections.tsx` — серверные секции.
-- `frontend/src/components/home/ProductCard.tsx` — серверная карточка по `ProductPreview`; форматирование AED предусмотрено, все текущие цены `null`.
+- `frontend/src/components/home/ProductCard.tsx` — серверная карточка по `ProductPreview`; форматирование AED предусмотрено, в мок-данных стоят демонстрационные суммы 100–2 000 AED.
 - `frontend/src/components/home/ProjectContactLink.tsx` — серверная общая ссылка для B2B CTA.
 - `frontend/src/components/home/HomeImage.tsx` — небольшой client island для `next/image` и `onError` fallback.
 - `frontend/src/components/home/InspirationGallery.tsx` — клиентская интеграция Fancybox, bind/unbind в пределах галереи, возврат фокуса и настройки reduced motion. Без JS обычные ссылки открывают локальные JPEG.
@@ -112,7 +112,7 @@ CSS подготовлен для контрольных ширин, но **фа
 Эти страницы **не создавались**, ссылки допускаются ТЗ и до следующих этапов ведут на 404:
 
 - `/shop` — Explore Collection.
-- `/outdoor-pots`, `/indoor-pots`, `/art-plants` — подтверждённые legacy-направления/URL; окончательную таксономию материалов не вводили.
+- `/shop/outdoor-pots`, `/shop/indoor-pots`, `/shop/artificial-plants` — страницы трёх направлений каталога; прежние URL перенаправляют на новые.
 - `/product/coral-planter-25526`.
 - `/product/magnifico-floor-vase-24182`.
 - `/product/pandora-floor-vase-17310`.

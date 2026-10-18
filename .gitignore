@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+**/vendor/
+**/node_modules/
+**/.next/
+**/out/
+**/coverage/
+**/*.log
+**/.phpunit.cache/
+**/auth.json
+.DS_Store
+/references/

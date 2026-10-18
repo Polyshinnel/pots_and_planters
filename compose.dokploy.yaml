@@ -1,0 +1,21 @@
+# Dokploy attaches its router network to the selected nginx HTTP service.
+# Remove the local port binding; the Dokploy domain routes to nginx:80.
+x-dokploy-restart: &dokploy-restart
+  restart: unless-stopped
+
+services:
+  frontend:
+    <<: *dokploy-restart
+  nginx:
+    <<: *dokploy-restart
+    ports: !reset []
+  backend:
+    <<: *dokploy-restart
+  horizon:
+    <<: *dokploy-restart
+  scheduler:
+    <<: *dokploy-restart
+  db:
+    <<: *dokploy-restart
+  redis:
+    <<: *dokploy-restart

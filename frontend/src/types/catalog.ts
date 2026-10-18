@@ -9,8 +9,15 @@ export const filterKeys = ['material', 'color', 'size', 'usage'] as const;
 export type FilterKey = typeof filterKeys[number];
 export type CatalogFilters = Partial<Record<FilterKey, string[]>>;
 export type ProductSpecifications = { diameterCm?: number; heightCm?: number; finish?: string };
+export type ProductImage = { src: string; alt: string; order?: number };
 export type Product = {
   id: string; slug: string; name: string; sku: string; categoryIds: string[];
+  primaryCategoryId?: string; images?: ProductImage[]; currency?: 'AED';
+  description?: string | null; seoTitle?: string | null; seoDescription?: string | null;
+  descriptionHeading?: string | null; descriptionParagraphs?: string[];
+  /** Only verified details belong here; attributes remain catalogue filter fixtures. */
+  details?: { material?: string; usage?: string; color?: string; size?: string };
+  priceVerified?: boolean;
   image: string | null; specifications?: ProductSpecifications; attributes: Partial<Record<FilterKey, string[]>>;
   priceAed: number | null; published: boolean; featured: boolean; sample: boolean;
 };
@@ -28,5 +35,6 @@ export interface CatalogRepository {
   getCategories(): Promise<Category[]>;
   getCategoryByPath(path: string): Promise<Category | undefined>;
   getProductBySlug(slug: string): Promise<Product | undefined>;
+  getRelatedProducts(product: Product, limit?: number): Promise<Product[]>;
   getProducts(query: CatalogQuery): Promise<CatalogResult>;
 }

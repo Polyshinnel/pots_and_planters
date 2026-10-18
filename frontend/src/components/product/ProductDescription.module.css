@@ -1,0 +1,6 @@
+.description { max-width: 900px; margin-top: 56px; line-height: 1.8; }
+.description h2 { margin: 0 0 16px; font-size: 22px; line-height: 1.3; font-weight: 600; }
+.description p { margin: 0 0 16px; }
+@media (max-width: 35.999em) {
+  .description { margin-top: 36px; }
+}

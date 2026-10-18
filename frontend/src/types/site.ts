@@ -8,4 +8,3 @@ export interface SiteConfig {
   showrooms: readonly ContactPlaceholder[];
   whatsappUrl: `https://wa.me/${string}` | null;
 }
-export interface CartPreview { itemCount: number }

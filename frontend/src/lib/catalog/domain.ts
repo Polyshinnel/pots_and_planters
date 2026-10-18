@@ -1,4 +1,5 @@
 import { filterKeys, type Category, type Product, type CatalogQuery, type CatalogResult, type CatalogFacet, type CatalogFilters } from '../../types/catalog';
+import { categories } from '../../config/catalog';
 
 export const PAGE_SIZE = 12;
 export const facetLabels = { material: 'Material', color: 'Color', size: 'Size', usage: 'Usage' };
@@ -55,5 +56,8 @@ export function selectProducts(products: Product[], categories: Category[], quer
   return { products: sorted.slice((page - 1) * perPage, page * perPage), total: sorted.length, page, pageCount, perPage, facets: getFacets(scoped), sorts: getSorts(scoped) };
 }
 export { formatPrice } from '../format-price';
-export const productPath = (slug: string) => `/product/${encodeURIComponent(slug)}`;
+export const productPath = (slug: string, categoryId = 'outdoor') => {
+  const category = categories.find((item) => item.id === categoryId) ?? categories[0];
+  return `${category.path}/${encodeURIComponent(slug)}`;
+};
 export const SHOP_PATH = '/shop';

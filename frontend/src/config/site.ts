@@ -1,5 +1,5 @@
 import { categoryPath } from './catalog';
-import type { CartPreview, SiteConfig } from '@/types/site';
+import type { SiteConfig } from '@/types/site';
 
 // Stage 3 will replace these mock values with confirmed API data.
 export const siteConfig: SiteConfig = {
@@ -20,4 +20,3 @@ export const siteConfig: SiteConfig = {
   // Legacy footer contains a destination; it requires confirmation before activation.
   whatsappUrl: null,
 };
-export const cartPreview: CartPreview = { itemCount: 0 };

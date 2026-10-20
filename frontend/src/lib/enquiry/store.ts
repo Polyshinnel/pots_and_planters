@@ -52,6 +52,11 @@ export const enquiryStore = {
     hydrate();
     return commit(addEnquiryItem(snapshot.items, { productId, sku, quantity }));
   },
+  /** Validate all lines before a single commit; a rejected line leaves the cart intact. */
+  addItems(items: readonly EnquiryItem[]) {
+    hydrate();
+    return commit(items.reduce((next, item) => addEnquiryItem(next, item), [...snapshot.items]));
+  },
   setQuantity(sku: string, quantity: number) {
     hydrate();
     return commit(setEnquiryQuantity(snapshot.items, sku, quantity));

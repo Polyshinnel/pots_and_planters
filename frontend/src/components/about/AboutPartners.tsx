@@ -19,8 +19,8 @@ export function AboutPartners() {
     : 0;
 
   return <>
-    <Swiper className={styles.partnersSwiper} aria-label="Our partners" aria-roledescription="carousel"
-      loop slidesPerView={1} slidesPerGroup={1} spaceBetween={16} onSwiper={setSwiper}
+    <Swiper className={styles.partnersSwiper} aria-label="Brands we've worked with" aria-roledescription="carousel"
+      loop slidesPerView={1.3} slidesPerGroup={1} spaceBetween={12} onSwiper={setSwiper}
       onSlideChange={(instance) => setActiveIndex(instance.realIndex)}
       breakpoints={{ 480: { slidesPerView: 2 }, 680: { slidesPerView: 3, spaceBetween: 20 }, 900: { slidesPerView: 4, spaceBetween: 20 }, 1200: { slidesPerView: 5, spaceBetween: 24 } }}>
       {aboutPartners.map((partner) => <SwiperSlide key={partner.name} className={styles.partnerSlide}>

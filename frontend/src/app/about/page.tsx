@@ -14,8 +14,8 @@ import homeStyles from '@/components/home/Home.module.css';
 import styles from '@/components/about/About.module.css';
 
 export const metadata: Metadata = {
-  title: 'About Pots & Planters | Planters & Greenery for Professionals',
-  description: 'Explore Pots & Planters: indoor and outdoor planters and artificial greenery for architects, designers and project buyers. Visit our Dubai and Riyadh showrooms.',
+  title: 'About Pots & Planters | Planters & Greenery for Projects',
+  description: 'Discover how Pots & Planters helps architects, designers and project buyers explore indoor and outdoor planters and artificial greenery for projects in the UAE.',
   alternates: { canonical: '/about' },
 };
 
@@ -27,14 +27,14 @@ export default function AboutPage() {
 
     <header className={styles.hero}>
       <div>
-        <p className={styles.eyebrow}>For considered spaces</p>
-        <h1>About Pots &amp; Planters</h1>
+        <p className={styles.eyebrow}>FOR CONSIDERED SPACES</p>
+        <h1>Planters &amp; Greenery for Thoughtfully Designed Spaces</h1>
         <p className={styles.introduction}>{aboutCopy.introduction}</p>
         <AboutContactButton />
       </div>
       <figure>
         <Image src={aboutCopy.heroImage.src} alt={aboutCopy.heroImage.alt} width={700} height={394} sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1420px) 48vw, 650px" preload className={styles.heroImage} />
-        <figcaption>{aboutCopy.heroImage.caption}</figcaption>
+        {aboutCopy.heroImage.caption && <figcaption>{aboutCopy.heroImage.caption}</figcaption>}
       </figure>
     </header>
 
@@ -49,14 +49,14 @@ export default function AboutPage() {
 
     <section className={styles.section} aria-labelledby="partners-title">
       <div className={styles.sectionIntro}><p className={styles.eyebrow}>Trusted names</p>
-        <h2 id="partners-title">Our Partners</h2>
+        <h2 id="partners-title">Brands We&apos;ve Worked With</h2>
       </div>
       <AboutPartners />
     </section>
 
     <section className={styles.section} aria-labelledby="range-title">
       <div className={styles.sectionIntro}><p className={styles.eyebrow}>Explore the collection</p>
-        <h2 id="range-title">Our Product Range</h2><p>Three starting points for your next space. Explore the collection, then discuss your shortlist with our team.</p>
+        <h2 id="range-title">Our Product Range</h2><p>Explore outdoor planters, indoor pots and artificial greenery for hospitality, workplace, residential and commercial environments. Browse the collections or contact our team to discuss suitable options for your project.</p>
       </div>
       <div className={`${homeStyles.home} ${homeStyles.categoryGrid}`}>{aboutCategories.map((category) => <Link key={category.id} href={category.path} className={homeStyles.categoryCard}>
         <div className={homeStyles.categoryImage}><HomeImage image={category.image} sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1420px) 32vw, 430px" objectFit="cover" /></div>

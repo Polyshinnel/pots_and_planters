@@ -1,5 +1,6 @@
 export type Category = {
   id: string; slug: string; path: string; name: string; heading: string; seoTitle: string; description: string;
+  introHeading?: string | null; introParagraphs?: string[]; image?: string | null; imageAlt?: string | null; ogImage?: string | null; seoDescription?: string; tileDescription?: string;
 };
 export type Catalogue = {
   id: string; slug: string; title: string; description: string; coverImage: string; coverAlt?: string;
@@ -32,8 +33,6 @@ export type CatalogResult = {
 export interface CatalogRepository {
   getCatalogues(): Promise<Catalogue[]>;
   getCataloguesByCategory(categoryId: string): Promise<Catalogue[]>;
-  getCategories(): Promise<Category[]>;
-  getCategoryByPath(path: string): Promise<Category | undefined>;
   getProductBySlug(slug: string): Promise<Product | undefined>;
   getRelatedProducts(product: Product, limit?: number): Promise<Product[]>;
   getProducts(query: CatalogQuery): Promise<CatalogResult>;

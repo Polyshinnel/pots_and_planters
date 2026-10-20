@@ -16,7 +16,7 @@ const { catalogues } = require('../src/data/catalogues.mock.ts');
 const { selectCatalogues, cataloguesPath } = require('../src/lib/catalog/catalogues.ts');
 const { catalogRepository } = require('../src/lib/catalog/repository.ts');
 const query = (overrides = {}) => ({ filters: {}, sort: 'featured', page: 1, perPage: 12, ...overrides });
-const select = (q) => domain.selectProducts(products, categories, query(q));
+const select = (q) => domain.selectProducts(products, query(q));
 
 test('published products paginate and hidden products are excluded', () => {
   assert.equal(select().total, 16);
@@ -70,7 +70,7 @@ test('mock fixture prices stay in range; numeric sorting and enquiry handling wo
   assert.ok(select().sorts.some((s) => s.value === 'price-asc'));
   const priced = [null, 50, 100, 0].map((priceAed, i) => ({ ...products[0], id: String(i), priceAed }));
   for (const [sort, expected] of [['price-asc', [0, 50, 100, null]], ['price-desc', [100, 50, 0, null]]]) {
-    assert.deepEqual(domain.selectProducts(priced, categories, query({ sort })).products.map((p) => p.priceAed), expected);
+    assert.deepEqual(domain.selectProducts(priced, query({ sort })).products.map((p) => p.priceAed), expected);
   }
   assert.equal(domain.formatPrice(null), 'Price on enquiry');
   assert.equal(domain.formatPrice(50), 'AED 50');

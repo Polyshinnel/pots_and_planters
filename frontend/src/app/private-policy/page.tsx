@@ -1,13 +1,10 @@
-import type { Metadata } from 'next';
+import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import Link from 'next/link';
 import { Container } from '@mantine/core';
 import styles from './PrivacyPolicy.module.css';
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | Pots & Planters',
-  description: 'Learn how Pots & Planters handles information related to website enquiries, product selections, catalogue requests and essential website storage.',
-  alternates: { canonical: '/private-policy' },
-};
+export const generateMetadata = () => getStaticPageMetadata('private_policy');
+export const dynamic = 'force-dynamic';
 
 export default function PrivacyPolicyPage() {
   return <Container size={1420} className={styles.page}>

@@ -10,6 +10,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -28,6 +29,8 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->brandName('Pots & Planters')
             ->colors(['primary' => Color::Emerald])
+            ->maxContentWidth(Width::Full)
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->pages([Dashboard::class])
             ->middleware([
                 EncryptCookies::class,

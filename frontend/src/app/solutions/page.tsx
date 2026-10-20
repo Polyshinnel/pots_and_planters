@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@mantine/core';
@@ -9,11 +9,8 @@ import pageStyles from '@/components/catalog/Catalog.module.css';
 import aboutStyles from '@/components/about/About.module.css';
 import styles from '@/components/solutions/Solutions.module.css';
 
-export const metadata: Metadata = {
-  title: 'Planters & Greenery Solutions for Hotels, Offices & Villas | Pots & Planters',
-  description: 'Explore planters and artificial greenery for hotels, restaurants, offices, villas and commercial spaces in Dubai and the UAE. Discover interior concepts and request a quotation.',
-  alternates: { canonical: '/solutions' },
-};
+export const generateMetadata = () => getStaticPageMetadata('solutions');
+export const dynamic = 'force-dynamic';
 
 export default async function SolutionsPage() {
   const solutions = await solutionsRepository.getSolutionCategories();

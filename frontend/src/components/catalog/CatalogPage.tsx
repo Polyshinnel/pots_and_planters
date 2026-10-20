@@ -2,33 +2,13 @@ import Link from 'next/link';
 import { Container } from '@mantine/core';
 import type { Category } from '@/types/catalog';
 import { catalogRepository } from '@/lib/catalog/repository';
+import { getCategories } from '@/lib/catalog/categories.server';
 import { parseQuery, PAGE_SIZE, queryString, SHOP_PATH } from '@/lib/catalog/domain';
 import { CatalogListing } from './CatalogListing';
 import { CategoryCataloguesCTA } from './CategoryCataloguesCTA';
 import styles from './Catalog.module.css';
 
 const categoryIntro: Record<string, { title: string; paragraphs: string[] }> = {
-  'outdoor-pots': {
-    title: 'Outdoor Planters for Hotels, Villas and Commercial Projects',
-    paragraphs: [
-      'Explore outdoor pots and planters for terraces, entrances, landscaped areas and hospitality spaces across Dubai and the UAE. Our collection includes a variety of shapes, finishes and sizes suitable for different architectural concepts.',
-      'We work with designers, architects and project teams to help select planters that complement the surrounding space. Browse the collection or contact our team to discuss product specifications and project requirements.',
-    ],
-  },
-  'indoor-pots': {
-    title: 'Indoor Planters for Hotels, Offices and Residential Interiors',
-    paragraphs: [
-      'Explore our collection of indoor pots and decorative planters for hotels, restaurants, offices, private villas and residential interiors across Dubai and the UAE. Discover a variety of shapes, sizes and finishes designed to complement contemporary, minimalist and classic spaces.',
-      'We work with interior designers, architects and project teams to help select planters that suit their design concepts and spatial requirements. Whether you are furnishing a hotel lobby, creating greenery for an office or completing a residential project, our team can assist with product selection and specifications.',
-    ],
-  },
-  'artificial-plants': {
-    title: 'Artificial Plants & Trees for Commercial and Residential Projects',
-    paragraphs: [
-      'Discover artificial plants and decorative trees for hotels, restaurants, offices, retail spaces and private residences across Dubai and the UAE. Our collection offers greenery solutions for interiors and other suitable spaces where natural plants may be difficult to maintain or where a consistent appearance is preferred.',
-      'We help architects, interior designers and project teams select artificial greenery that complements their spaces and design requirements. Explore decorative plants, trees and arrangements for hospitality, commercial and residential projects, or contact our team to discuss suitable options for your project.',
-    ],
-  },
   shop: {
     title: 'Pots, Planters & Artificial Greenery for Projects Across the UAE',
     paragraphs: [
@@ -40,7 +20,7 @@ const categoryIntro: Record<string, { title: string; paragraphs: string[] }> = {
 
 export type SearchParams = Record<string, string | string[] | undefined>;
 export async function CatalogPage({ category, searchParams }: { category?: Category; searchParams: SearchParams }) {
-  const categories = await catalogRepository.getCategories();
+  const categories = await getCategories();
   const catalogues = await (category ? catalogRepository.getCataloguesByCategory(category.id) : catalogRepository.getCatalogues());
   const scope = await catalogRepository.getProducts({ categoryId: category?.id, filters: {}, sort: 'featured', page: 1, perPage: PAGE_SIZE });
   const params = new URLSearchParams();
@@ -49,7 +29,7 @@ export async function CatalogPage({ category, searchParams }: { category?: Categ
   const result = await catalogRepository.getProducts(query);
   query.page = result.page;
   const path = category?.path ?? SHOP_PATH;
-  const intro = categoryIntro[category?.slug ?? 'shop'];
+  const intro = category ? (category.introHeading && category.introParagraphs?.length ? { title: category.introHeading, paragraphs: category.introParagraphs } : undefined) : categoryIntro.shop;
   return <Container className={styles.page}>
     <nav aria-label="Breadcrumb" className={styles.breadcrumb}><ol>
       <li><Link href="/">Main</Link></li>

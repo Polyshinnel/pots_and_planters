@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import Link from 'next/link';
 import { Container } from '@mantine/core';
 import { contactsData } from '@/data/contacts.mock';
@@ -10,11 +10,8 @@ import { ContactEnquiryForm } from '@/components/forms/ContactEnquiryForm';
 import pageStyles from '@/components/catalog/Catalog.module.css';
 import styles from '@/components/contacts/Contacts.module.css';
 
-export const metadata: Metadata = {
-  title: 'Contact Us | Pots & Planters',
-  description: 'Discuss planters and artificial greenery for your project. Contact our team and explore showroom contacts in Dubai, UAE and Riyadh, Saudi Arabia.',
-  alternates: { canonical: '/contacts' },
-};
+export const generateMetadata = () => getStaticPageMetadata('contacts');
+export const dynamic = 'force-dynamic';
 
 export default function ContactsPage() {
   const contact = getProjectContact('Hello Pots & Planters, I would like to discuss planters and artificial greenery for my project.');

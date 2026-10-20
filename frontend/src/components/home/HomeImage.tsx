@@ -15,6 +15,7 @@ export function HomeImage({ image, sizes, priority = false, objectFit = 'contain
     fill
     sizes={sizes}
     priority={priority}
+    unoptimized={!missing && image.src.startsWith('/storage/')}
     style={{ objectFit }}
     onError={missing ? undefined : () => setFailedSrc(image.src)}
   />{missing && <span className={styles.imagePending}>Image pending</span>}</>;

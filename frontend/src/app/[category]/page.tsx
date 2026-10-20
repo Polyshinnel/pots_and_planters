@@ -1,5 +1,5 @@
 import { notFound, permanentRedirect } from 'next/navigation';
-import { categories } from '@/config/catalog';
+import { getCategoryByPath } from '@/lib/catalog/categories.server';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -8,7 +8,7 @@ export default async function LegacyCategoryRedirect({ params, searchParams }: {
   searchParams: Promise<SearchParams>;
 }) {
   const { category: slug } = await params;
-  const category = categories.find((item) => item.slug === slug || (item.id === 'artificial' && slug === 'art-plants'));
+  const category = await getCategoryByPath(`/shop/${slug === 'art-plants' ? 'artificial-plants' : slug}`);
   if (!category) notFound();
 
   const query = new URLSearchParams();

@@ -8,6 +8,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        // No automatic accounts or example data. Use app:create-admin interactively.
+        $this->call(PageSeoSeeder::class);
+        $this->call(CategorySeeder::class);
     }
 }

@@ -33,6 +33,8 @@ services:
       WATCHPACK_POLLING: 'true'
     volumes:
       - ./frontend/src:/app/src:ro
+      - ./frontend/tests:/app/tests:ro
+      - ./frontend/package.json:/app/package.json:ro
       - ./frontend/public:/app/public:ro
       - ./frontend/next.config.ts:/app/next.config.ts:ro
       - ./frontend/tsconfig.json:/app/tsconfig.json:ro

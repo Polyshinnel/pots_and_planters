@@ -1,9 +1,7 @@
-import type { Metadata } from 'next';
+import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import { CatalogPage, type SearchParams } from '@/components/catalog/CatalogPage';
-import { SHOP_PATH } from '@/lib/catalog/domain';
-
-// Canonical extension point: queries do not become independent category identities.
-export const metadata: Metadata = { title: 'Planters & Artificial Plants Supplier in UAE | Pots & Planters', description: 'Explore pots, planters and artificial greenery.', alternates: { canonical: SHOP_PATH } };
+export const generateMetadata = () => getStaticPageMetadata('shop');
+export const dynamic = 'force-dynamic';
 export default async function Shop({ searchParams }: { searchParams: Promise<SearchParams> }) {
   return <CatalogPage searchParams={await searchParams} />;
 }

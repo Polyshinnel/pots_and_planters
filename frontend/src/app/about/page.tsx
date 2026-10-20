@@ -1,9 +1,10 @@
-import type { Metadata } from 'next';
+import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Container } from '@mantine/core';
 import { IconArrowUpRight, IconMapPin } from '@tabler/icons-react';
-import { aboutCategories, aboutCopy } from '@/data/about.mock';
+import { aboutCopy } from '@/data/about.mock';
+import { getCategories } from '@/lib/catalog/categories.server';
 import { AboutPartners } from '@/components/about/AboutPartners';
 import { AboutContactButton } from '@/components/about/AboutContactButton';
 import { AboutTestimonials } from '@/components/about/AboutTestimonials';
@@ -13,13 +14,11 @@ import pageStyles from '@/components/catalog/Catalog.module.css';
 import homeStyles from '@/components/home/Home.module.css';
 import styles from '@/components/about/About.module.css';
 
-export const metadata: Metadata = {
-  title: 'About Pots & Planters | Planters & Greenery for Projects',
-  description: 'Discover how Pots & Planters helps architects, designers and project buyers explore indoor and outdoor planters and artificial greenery for projects in the UAE.',
-  alternates: { canonical: '/about' },
-};
+export const generateMetadata = () => getStaticPageMetadata('about');
+export const dynamic = 'force-dynamic';
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const categories = await getCategories();
   return <Container className={`${pageStyles.page} ${styles.page}`}>
     <nav aria-label="Breadcrumb" className={pageStyles.breadcrumb}><ol>
       <li><Link href="/">Main</Link></li><li><span aria-current="page">About Us</span></li>
@@ -58,8 +57,8 @@ export default function AboutPage() {
       <div className={styles.sectionIntro}><p className={styles.eyebrow}>Explore the collection</p>
         <h2 id="range-title">Our Product Range</h2><p>Explore outdoor planters, indoor pots and artificial greenery for hospitality, workplace, residential and commercial environments. Browse the collections or contact our team to discuss suitable options for your project.</p>
       </div>
-      <div className={`${homeStyles.home} ${homeStyles.categoryGrid}`}>{aboutCategories.map((category) => <Link key={category.id} href={category.path} className={homeStyles.categoryCard}>
-        <div className={homeStyles.categoryImage}><HomeImage image={category.image} sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1420px) 32vw, 430px" objectFit="cover" /></div>
+      <div className={`${homeStyles.home} ${homeStyles.categoryGrid}`}>{categories.map((category) => <Link key={category.id} href={category.path} className={homeStyles.categoryCard}>
+        <div className={homeStyles.categoryImage}>{category.image && <HomeImage image={{ src: category.image, alt: category.imageAlt ?? category.name }} sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1420px) 32vw, 430px" objectFit="cover" />}</div>
         <div className={homeStyles.categoryContent}><h3>{category.name}</h3><IconArrowUpRight size={24} stroke={1.5} aria-hidden="true" /><p>{category.description}</p></div>
       </Link>)}</div>
     </section>

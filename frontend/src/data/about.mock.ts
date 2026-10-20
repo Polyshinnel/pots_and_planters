@@ -1,5 +1,3 @@
-import { categories } from '@/config/catalog';
-import { homeCategories } from './home.mock';
 
 // Editorial adaptation of legacy template/common/home.tpl: the company copy
 // describes designers, developers, buyers, landscapers and hospitality interiors.
@@ -18,12 +16,6 @@ export const aboutCopy = {
     caption: '',
   },
 };
-
-// Resolve names and URLs from FE-03, with the existing FE-02 category imagery.
-export const aboutCategories = categories.map((category) => ({
-  ...category,
-  image: homeCategories.find((item) => item.id === category.id)?.image ?? null,
-}));
 
 export const aboutPartners = [
   { name: 'MAN Private Offices', image: '/images/about/partners/man-private-offices.png', href: 'https://manprivateoffices.com/' },

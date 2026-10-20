@@ -2,7 +2,8 @@ import { Container } from '@mantine/core';
 import Image from 'next/image';
 import { IconArrowUpRight, IconBuildingStore, IconPackage, IconRulerMeasure, IconTruckDelivery } from '@tabler/icons-react';
 import Link from 'next/link';
-import { featuredProducts, homeCatalogues, homeCategories, homeCopy, projectSolutions } from '@/data/home.mock';
+import { featuredProducts, homeCatalogues, homeCopy, projectSolutions } from '@/data/home.mock';
+import type { Category } from '@/types/catalog';
 import { HomeImage } from './HomeImage';
 import { homeImageSizes } from './image-sizes';
 import { FeaturedProductsSlider } from './FeaturedProductsSlider';
@@ -40,12 +41,12 @@ export function HomeHero() {
   </Container></section>;
 }
 
-export function HomeCategories() {
+export function HomeCategories({ categories }: { categories: Category[] }) {
   return <section className={styles.section} aria-labelledby="categories-title"><Container>
     <SectionHeading id="categories-title" copy={homeCopy.categories} />
-    <div className={styles.categoryGrid}>{homeCategories.map((category) => <Link key={category.id} href={category.href} className={styles.categoryCard}>
-      <div className={styles.categoryImage}><HomeImage image={category.image} sizes={homeImageSizes.category} objectFit="cover" /></div>
-      <div className={styles.categoryContent}><h3>{category.name}</h3><IconArrowUpRight size={24} stroke={1.5} aria-hidden="true" /><p>{category.description}</p></div>
+    <div className={styles.categoryGrid}>{categories.map((category) => <Link key={category.id} href={category.path} className={styles.categoryCard}>
+      <div className={styles.categoryImage}>{category.image && <HomeImage image={{ src: category.image, alt: category.imageAlt ?? category.name }} sizes={homeImageSizes.category} objectFit="cover" />}</div>
+      <div className={styles.categoryContent}><h3>{category.name}</h3><IconArrowUpRight size={24} stroke={1.5} aria-hidden="true" /><p>{category.tileDescription ?? category.description}</p></div>
     </Link>)}</div>
   </Container></section>;
 }

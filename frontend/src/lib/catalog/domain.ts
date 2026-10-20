@@ -1,11 +1,14 @@
-import { filterKeys, type Category, type Product, type CatalogQuery, type CatalogResult, type CatalogFacet, type CatalogFilters } from '../../types/catalog';
-import { categories } from '../../config/catalog';
+import { filterKeys, type Product, type CatalogQuery, type CatalogResult, type CatalogFacet, type CatalogFilters } from '../../types/catalog';
 
 export const PAGE_SIZE = 12;
+/** BE-03 stable IDs deliberately match the existing mock product category IDs. */
+export const mockProductCategoryIdByPublicId: Record<string, string> = { outdoor: 'outdoor', indoor: 'indoor', artificial: 'artificial' };
+export const categorySlugByPublicId: Record<string, string> = { outdoor: 'outdoor-pots', indoor: 'indoor-pots', artificial: 'artificial-plants' };
 export const facetLabels = { material: 'Material', color: 'Color', size: 'Size', usage: 'Usage' };
-export function categoryProducts(products: Product[], categories: Category[], categoryId?: string) {
-  if (categoryId && !categories.some((category) => category.id === categoryId)) return [];
-  return [...new Map(products.filter((p) => p.published && (!categoryId || p.categoryIds.includes(categoryId))).map((p) => [p.id, p])).values()];
+export function categoryProducts(products: Product[], categoryId?: string) {
+  const mockCategoryId = categoryId ? mockProductCategoryIdByPublicId[categoryId] : undefined;
+  if (categoryId && !mockCategoryId) return [];
+  return [...new Map(products.filter((p) => p.published && (!mockCategoryId || p.categoryIds.includes(mockCategoryId))).map((p) => [p.id, p])).values()];
 }
 export function getFacets(products: Product[]): CatalogFacet[] {
   return filterKeys.map((key) => ({ key, label: facetLabels[key], values: [...new Set(products.flatMap((p) => p.attributes[key] ?? []))].sort() })).filter((facet) => facet.values.length > 0);
@@ -38,8 +41,8 @@ export function queryString(query: Pick<CatalogQuery, 'filters' | 'sort' | 'page
   const encoded = params.toString();
   return encoded ? `?${encoded}` : '';
 }
-export function selectProducts(products: Product[], categories: Category[], query: CatalogQuery): CatalogResult {
-  const scoped = categoryProducts(products, categories, query.categoryId);
+export function selectProducts(products: Product[], query: CatalogQuery): CatalogResult {
+  const scoped = categoryProducts(products, query.categoryId);
   const filtered = scoped.filter((p) => filterKeys.every((key) => !query.filters[key]?.length || query.filters[key]!.some((value) => p.attributes[key]?.includes(value))));
   const sorted = [...filtered].sort((a, b) => {
     if (query.sort === 'name-asc' || query.sort === 'name-desc') return a.name.localeCompare(b.name, 'en') * (query.sort === 'name-desc' ? -1 : 1) || a.id.localeCompare(b.id);
@@ -57,7 +60,6 @@ export function selectProducts(products: Product[], categories: Category[], quer
 }
 export { formatPrice } from '../format-price';
 export const productPath = (slug: string, categoryId = 'outdoor') => {
-  const category = categories.find((item) => item.id === categoryId) ?? categories[0];
-  return `${category.path}/${encodeURIComponent(slug)}`;
+  return `/shop/${categorySlugByPublicId[categoryId] ?? categorySlugByPublicId.outdoor}/${encodeURIComponent(slug)}`;
 };
 export const SHOP_PATH = '/shop';

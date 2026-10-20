@@ -93,8 +93,11 @@ Production-like запуск:
 docker compose config --quiet
 docker compose up -d --build
 docker compose exec backend php artisan migrate --force
+docker compose exec backend php artisan db:seed --class=PageSeoSeeder --force
 docker compose exec backend php artisan app:create-admin
 ```
+
+`PageSeoSeeder` creates the seven initial static-page SEO records. It is safe to rerun: existing editor changes are preserved. Run it after migrations.
 
 Создание администратора интерактивное: имя, уникальный email, пароль от 12 символов и подтверждение.
 Пароль скрыт; опции CLI с паролем и автоматические аккаунты не предусмотрены.
@@ -126,6 +129,7 @@ docker compose down
 docker compose -f compose.yaml -f compose.dev.yaml config --quiet
 docker compose -f compose.yaml -f compose.dev.yaml up -d --build
 docker compose -f compose.yaml -f compose.dev.yaml exec backend php artisan migrate
+docker compose -f compose.yaml -f compose.dev.yaml exec backend php artisan db:seed --class=PageSeoSeeder
 ```
 
 Для повседневного запуска разработки используйте оба Compose-файла:

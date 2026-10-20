@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Container } from '@mantine/core';
 import { notFound, permanentRedirect } from 'next/navigation';
 import { catalogRepository } from '@/lib/catalog/repository';
+import { getCategories } from '@/lib/catalog/categories.server';
 import { primaryCategory, productImages, productSpecifications } from '@/lib/catalog/product-detail';
 import { formatPrice } from '@/lib/format-price';
 import { CatalogCard } from '@/components/catalog/CatalogCard';
@@ -17,7 +18,7 @@ async function resolveProduct(params: Props['params']) {
   const { category: categorySlug, slug } = await params;
   const product = await catalogRepository.getProductBySlug(slug);
   if (!product) notFound();
-  const category = primaryCategory(product, await catalogRepository.getCategories());
+  const category = primaryCategory(product, await getCategories());
   if (!category) notFound();
   if (category.slug !== categorySlug) permanentRedirect(`${category.path}/${encodeURIComponent(product.slug)}`);
   return { product, category };

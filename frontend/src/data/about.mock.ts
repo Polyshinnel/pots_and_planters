@@ -25,6 +25,21 @@ export const aboutCategories = categories.map((category) => ({
   image: homeCategories.find((item) => item.id === category.id)?.image ?? null,
 }));
 
+export const aboutPartners = [
+  { name: 'MAN Private Offices', image: '/images/about/partners/man-private-offices.png', href: 'https://manprivateoffices.com/' },
+  { name: 'The Ritz-Carlton', image: '/images/about/partners/ritz-carlton.png', href: 'https://www.ritzcarlton.com/' },
+  { name: 'Rixos', image: '/images/about/partners/rixos.png', href: 'https://www.rixos.com/' },
+  { name: 'Hilton', image: '/images/about/partners/hilton.png', href: 'https://www.hilton.com/' },
+  { name: 'Regnum', image: '/images/about/partners/regnum.png', href: 'https://www.regnumhotels.com/' },
+  { name: 'Titanic Mardan Palace', image: '/images/about/partners/titanic-mardan-palace.png', href: 'https://www.titanic.com.tr/ru/titanic-mardan-palace' },
+  { name: 'Address', image: '/images/about/partners/address.png', href: 'http://adresyalikavak.com/' },
+  { name: 'Cartier', image: '/images/about/partners/cartier.png', href: 'https://www.cartier.com/en-us/home' },
+  { name: 'Zen Diamond', image: '/images/about/partners/zen-diamond.png', href: 'https://us.zendiamond.com/' },
+  { name: 'Istinye Park', image: '/images/about/partners/istinye-park.png', href: 'https://istinyepark.com.tr/' },
+  { name: 'Vadistanbul', image: '/images/about/partners/vadistanbul.png', href: 'https://www.vadistanbul.com/en' },
+  { name: 'IKEA', image: '/images/about/partners/ikea.png', href: 'https://www.ikea.com/' },
+] as const;
+
 export const aboutTestimonials = [
   { name: 'Platon Leonov', quote: 'We would like to thank Olga for the wonderful plants. She gave us excellent advice and helped us choose. Mikhail is a true professional. He quickly secured the plants in the planters and decorated them with decorative stones. We will definitely be back.', expandable: true },
   { name: 'Julia Alexander', quote: "I recently purchased several planters and pots from this company, and I couldn't be happier with my experience! The variety they offer is impressive, with options that cater to every style and preference. From elegant indoor pots designs to sturdy outdoor pots, there's something for every person.The quality of the products is outstanding. Each planter is well-crafted, ensuring durability while also being visually appealing. I've received so many compliments on the beautiful pots I've placed on my patio! Additionally, their customer service is exceptional. The staff was knowledgeable and helped me choose the right planters for my plants. They even provided helpful tips on care and maintenance.Overall, this company has transformed my gardening experience. I highly recommend them to anyone looking to enhance their home or garden with beautiful and functional planters!", expandable: true },

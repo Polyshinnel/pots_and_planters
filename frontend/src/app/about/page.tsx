@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { Container } from '@mantine/core';
 import { IconArrowUpRight, IconMapPin } from '@tabler/icons-react';
 import { aboutCategories, aboutCopy } from '@/data/about.mock';
+import { AboutPartners } from '@/components/about/AboutPartners';
+import { AboutContactButton } from '@/components/about/AboutContactButton';
 import { AboutTestimonials } from '@/components/about/AboutTestimonials';
 import { contactsData } from '@/data/contacts.mock';
 import { HomeImage } from '@/components/home/HomeImage';
@@ -28,7 +30,7 @@ export default function AboutPage() {
         <p className={styles.eyebrow}>For considered spaces</p>
         <h1>About Pots &amp; Planters</h1>
         <p className={styles.introduction}>{aboutCopy.introduction}</p>
-        <Link href="/contacts" className={styles.textLink}>Talk to Our Team <IconArrowUpRight size={20} aria-hidden="true" /></Link>
+        <AboutContactButton />
       </div>
       <figure>
         <Image src={aboutCopy.heroImage.src} alt={aboutCopy.heroImage.alt} width={700} height={394} sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1420px) 48vw, 650px" preload className={styles.heroImage} />
@@ -43,6 +45,13 @@ export default function AboutPage() {
       <div className={styles.considerations}>{aboutCopy.considerations.map((item, index) => <article key={item.title}>
         <span className={styles.step} aria-hidden="true">0{index + 1}</span><div><h3>{item.title}</h3><p>{item.description}</p></div>
       </article>)}</div>
+    </section>
+
+    <section className={styles.section} aria-labelledby="partners-title">
+      <div className={styles.sectionIntro}><p className={styles.eyebrow}>Trusted names</p>
+        <h2 id="partners-title">Our Partners</h2>
+      </div>
+      <AboutPartners />
     </section>
 
     <section className={styles.section} aria-labelledby="range-title">

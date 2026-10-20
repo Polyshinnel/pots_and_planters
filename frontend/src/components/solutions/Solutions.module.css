@@ -19,6 +19,8 @@
 .copy { max-width: 540px; min-width: 0; }
 .reverse .imageFrame { order: 2; }
 .solution .description { margin-top: 20px; color: var(--mantine-color-gray-7); }
+.solution .description + .description { margin-top: 12px; }
+.subheading { margin-top: 12px !important; font-size: 20px; font-weight: 600; line-height: 1.35 !important; }
 .collections { margin-top: 24px; }
 .collections > p { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--mantine-color-olive-8); }
 .collections ul { display: flex; flex-wrap: wrap; column-gap: 18px; padding: 0; margin: 8px 0 12px; list-style: none; }
@@ -44,3 +46,9 @@
 /* Scene sections retain their editorial introduction and collection links. */
 .solution.withGallery { grid-template-columns: minmax(0, 1fr); gap: 28px; }
 .withGallery .copy { max-width: 820px; }
+.sceneDescriptions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 32px; }
+.sceneDescriptions article { min-width: 0; }
+.sceneDescriptions h3 { margin: 4px 0 8px; font-size: 18px; font-weight: 600; line-height: 1.35; }
+.sceneDescriptions article > p:last-child { color: var(--mantine-color-gray-7); font-size: 14px; line-height: 1.6; }
+.conceptLabel { color: var(--mantine-color-olive-8); font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+@media (max-width: 47.999em) { .sceneDescriptions { grid-template-columns: minmax(0, 1fr); gap: 14px; } }

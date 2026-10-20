@@ -10,8 +10,8 @@ import aboutStyles from '@/components/about/About.module.css';
 import styles from '@/components/solutions/Solutions.module.css';
 
 export const metadata: Metadata = {
-  title: 'Planter Solutions for Hotels, Offices & Homes | Pots & Planters',
-  description: 'Explore planters and artificial greenery for hotels, restaurants, offices, villas and public spaces. Find suitable collections for your next project.',
+  title: 'Planters & Greenery Solutions for Hotels, Offices & Villas | Pots & Planters',
+  description: 'Explore planters and artificial greenery for hotels, restaurants, offices, villas and commercial spaces in Dubai and the UAE. Discover interior concepts and request a quotation.',
   alternates: { canonical: '/solutions' },
 };
 
@@ -26,8 +26,7 @@ export default async function SolutionsPage() {
       <div>
         <p className={styles.eyebrow}>SOLUTIONS FOR EVERY SPACE</p>
         <h1>Planters &amp; Greenery for Every Space</h1>
-        <p className={styles.lead}>From welcoming hotel entrances to private terraces and contemporary workplaces, discover how planters and artificial greenery can shape the character and function of a space.</p>
-        <p className={styles.supporting}>Explore ideas for your project, then browse suitable collections or contact our team to discuss your requirements.</p>
+        <p className={styles.lead}>Explore planter and artificial greenery solutions for hotels, restaurants, offices, villas and commercial spaces. Discover interior concepts, review suitable products and build an enquiry for your project.</p>
       </div>
       <figure>
         <div className={styles.heroImage}><Image src="/images/about/project-lounge.jpg" alt="Contemporary lounge with yellow seating and greenery in tall dark planters" fill preload sizes="(max-width: 767px) calc(100vw - 32px), (max-width: 1420px) 48vw, 650px" /></div>
@@ -40,7 +39,7 @@ export default async function SolutionsPage() {
     <div>{solutions.map((solution, index) => <SolutionSection key={solution.id} solution={solution} scenes={scenes[index]} reverse={index % 2 === 1} />)}</div>
     <section className={`${aboutStyles.closing} ${styles.closing}`} aria-labelledby="project-title">
       <h2 id="project-title">Let&apos;s Find the Right Fit for Your Project</h2>
-      <p>Tell us about your space, preferred styles and quantities. Our team can help you explore suitable collections and discuss a quotation for your requirements.</p>
+      <p>Planning a hotel, restaurant, office or residential project? Explore our planter and artificial greenery collections, select products from our interior concepts and send us your requirements. Our team can discuss suitable options, availability and a tailored quotation.</p>
       <div className={aboutStyles.actions}>
         <Link href="/contacts" className={aboutStyles.primaryButton}>Discuss Your Project <IconArrowUpRight size={20} aria-hidden="true" /></Link>
         <Link href="/shop" className={aboutStyles.secondaryButton}>Explore Collections <IconArrowUpRight size={20} aria-hidden="true" /></Link>

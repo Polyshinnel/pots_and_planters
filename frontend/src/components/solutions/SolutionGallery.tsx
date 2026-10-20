@@ -85,10 +85,6 @@ function Scene({ scene, categoryId }: { scene: ResolvedSolutionScene; categoryId
   };
 
   return <div onKeyDown={(event) => { if (event.key === 'Escape') setActiveItem(null); }}>
-    <div className={styles.heading}>
-      <div><p className={styles.label}>{scene.isConcept ? 'Concept visualisation' : 'Design inspiration'}</p><h3>{scene.title}</h3></div>
-      <p>{scene.summary}</p>
-    </div>
     <div className={styles.sceneLayout}>
       <div className={styles.visual}>
         {!scene.images.length ? <p className={styles.empty}>Scene imagery is being prepared. Explore the specification below.</p>
@@ -108,7 +104,7 @@ function Scene({ scene, categoryId }: { scene: ResolvedSolutionScene; categoryId
       </div>
       <div className={styles.specification}>
         <h4>Suggested specification</h4>
-        <p className={styles.note}>Adjust quantities to suit your brief. Availability, suitability and pricing require confirmation.</p>
+        <p className={styles.note}>Explore the products associated with this concept, review their dimensions and finishes, and adjust quantities to suit your project.</p>
         {!scene.items.length && <p>Product suggestions are being prepared. <Link href="/shop">Explore Collections</Link></p>}
         <ol className={styles.items}>
           {scene.items.map((item, index) => {

@@ -8,6 +8,7 @@ export type SolutionCategory = {
   sortOrder: number;
   isPublished: boolean;
   headline: string;
+  seoHeading: string;
   image: { src: string; alt: string };
   collections: Pick<Category, 'id' | 'name' | 'path'>[];
 };

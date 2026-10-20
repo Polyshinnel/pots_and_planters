@@ -19,6 +19,7 @@ const lato = localFont({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://potsandplanters.ae'),
   title: 'Pots & Planters — Layout preview',
   description: 'Pots & Planters shared layout preview.',
   manifest: '/site.webmanifest',

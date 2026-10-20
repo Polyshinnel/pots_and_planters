@@ -12,8 +12,9 @@ export function SolutionSection({ solution, scenes = [], reverse = false }: { so
     </div>
     <div className={styles.copy}>
       <p className={styles.eyebrow}>{solution.title}</p>
-      <h2 id={`${solution.id}-title`}>{solution.headline}</h2>
-      <p className={styles.description}>{solution.intro}</p>
+      <h2 id={`${solution.id}-title`}>{solution.seoHeading}</h2>
+      <p className={styles.subheading}>{solution.headline}</p>
+      {solution.intro.split('\n\n').map((paragraph, index) => <p className={styles.description} key={index}>{paragraph}</p>)}
       <div className={styles.collections}>
         <p id={`${solution.id}-collections`}>Suitable collections</p>
         <ul aria-labelledby={`${solution.id}-collections`}>{solution.collections.map((category) => <li key={category.id}>
@@ -22,6 +23,13 @@ export function SolutionSection({ solution, scenes = [], reverse = false }: { so
       </div>
       <Link href="/shop" className={styles.textLink}>Explore Collections <IconArrowUpRight size={18} stroke={1.5} aria-hidden="true" /></Link>
     </div>
+    {scenes.length > 0 && <div className={styles.sceneDescriptions} aria-label="Interior concepts">
+      {scenes.map((scene) => <article key={scene.id}>
+        <p className={styles.conceptLabel}>{scene.isConcept ? 'Concept visualisation' : 'Design inspiration'}</p>
+        <h3>{scene.title}</h3>
+        <p>{scene.summary}</p>
+      </article>)}
+    </div>}
     {scenes.length > 0 && <SolutionGallery scenes={scenes} categoryId={solution.id} />}
   </section>;
 }

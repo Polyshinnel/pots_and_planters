@@ -18,7 +18,7 @@ export function ProductCardDetails({ sku, name, specifications, price, sample, h
   return <div className={c.content}>
     {sku && <p className={c.sku}>Model: {sku}{sample ? ' · Sample' : ''}</p>}
     <Heading className={c.name}>{name}</Heading>
-    {formattedSpecifications && <p className={c.specifications}>{formattedSpecifications}</p>}
+    <p className={c.specifications} aria-hidden={!formattedSpecifications || undefined}>{formattedSpecifications || '\u00a0'}</p>
     <div className={c.footer}>
       <p className={c.price}>{formatPrice(price)}</p>
       <span className={c.view}>View product <span aria-hidden="true">↗</span></span>

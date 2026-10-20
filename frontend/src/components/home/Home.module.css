@@ -50,17 +50,17 @@
 .solution p { color: var(--home-muted); font-size: 16px; line-height: 1.65; margin-top: 12px; max-width: 350px; }
 .productSwiper { overflow: hidden; }
 .productSwiper :global(.swiper-wrapper) { align-items: stretch; }
-.productSlide { display: flex; height: auto; }
+.productSlide { display: flex; height: auto; align-self: stretch; }
 .productControls { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 24px; }
 .productControls .mobileProductDots { display: none; }
-.productCard { min-width: 0; border: 1px solid #e2e3db; border-radius: 10px; overflow: hidden; background: white; }
+.productCard { display: flex; min-width: 0; border: 1px solid #e2e3db; border-radius: 10px; overflow: hidden; background: white; }
 .productSlide .productCard { width: 100%; height: 100%; }
-.productLink { display: flex; height: 100%; flex-direction: column; }
-.productImage { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; background: #fafaf8; }
+.productLink { display: flex; width: 100%; height: 100%; flex-direction: column; }
+.productImage { position: relative; flex: 0 0 auto; width: 100%; aspect-ratio: 1; overflow: hidden; background: #fafaf8; }
 .productContent { display: flex; flex: 1; flex-direction: column; gap: 10px; padding: 16px; min-width: 0; }
 .sku { margin: 0; font-size: 12px; line-height: 1.5; color: #666; overflow-wrap: anywhere; }
 .cardName { margin: 0; font-size: 16px; line-height: 1.45; font-weight: 600; color: var(--mantine-color-black); overflow-wrap: anywhere; }
-.specifications { margin: 0; font-size: 13px; line-height: 1.5; color: #666; overflow-wrap: anywhere; }
+.specifications { min-height: 1.5em; margin: 0; font-size: 13px; line-height: 1.5; color: #666; overflow-wrap: anywhere; }
 .cardFooter { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; column-gap: 8px; row-gap: 4px; margin-top: auto; padding-top: 8px; }
 .price { margin: 0 !important; font-size: 16px; font-weight: 700; color: var(--mantine-color-black); }
 .home .textLink { display: inline-flex; align-items: center; gap: 4px; min-height: auto; font-size: 14px; line-height: 1.5; font-weight: 600; text-decoration: underline; text-underline-offset: 4px; color: inherit; }

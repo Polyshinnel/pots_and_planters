@@ -6,7 +6,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import { IconSearch } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { siteConfig } from '@/config/site';
+import { isNavigationItemActive, siteNavigation } from '@/config/site';
 import { Brand } from './Brand';
 import { CartEntry } from './CartEntry';
 import { MobileNavigation } from './MobileNavigation';
@@ -28,7 +28,7 @@ export function SiteHeader({ opened, setOpened, overlay = false }: { opened: boo
       <div className={styles.headerRow}>
         <Brand variant={overlay ? 'headerOverlay' : 'header'} />
         <nav aria-label="Primary navigation" className={styles.desktopNav}>
-          {siteConfig.navigation.map((item) => <Link key={item.label} href={item.href} className={styles.navLink} aria-current={item.href === pathname && (pathname !== '/catalogues' || item.label === 'Catalogues') ? 'page' : undefined}>{item.label}</Link>)}
+          {siteNavigation.map((item) => <Link key={item.label} href={item.href} className={styles.navLink} aria-current={isNavigationItemActive(pathname, item.href) ? 'page' : undefined}>{item.label}</Link>)}
         </nav>
         <div className={styles.headerActions}>
           <CartEntry />

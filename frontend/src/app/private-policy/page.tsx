@@ -1,0 +1,31 @@
+import type { Metadata } from 'next';
+import Link from 'next/link';
+import { Container } from '@mantine/core';
+import styles from './PrivacyPolicy.module.css';
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | Pots & Planters',
+  description: 'Learn how Pots & Planters handles information related to website enquiries, product selections, catalogue requests and essential website storage.',
+  alternates: { canonical: '/private-policy' },
+};
+
+export default function PrivacyPolicyPage() {
+  return <Container size={1420} className={styles.page}>
+    <nav aria-label="Breadcrumb" className={styles.breadcrumb}><ol><li><Link href="/">Main</Link></li><li><span aria-current="page">Privacy Policy</span></li></ol></nav>
+    <article>
+      <header className={styles.heading}><h1>Privacy Policy</h1><p>This policy explains how information is handled when you visit the Pots &amp; Planters website.</p></header>
+      <section><h2>Introduction</h2><p>This website presents Pots &amp; Planters products, catalogues and project information. We aim to collect only information needed to operate website features and respond to enquiries. This policy describes the website’s current behaviour and how information may be handled if online enquiry services become available.</p></section>
+      <section><h2>Information We Collect</h2><p>When using the website, you may enter contact details such as your name, phone number, email address, company or project name, and message. You can also select products and quantities for an enquiry. Catalogue request forms may ask for contact details.</p><p>At present, online form submission and catalogue delivery are not connected: form details remain in the page and are not sent. Product selections are stored in your browser as described below. Information you choose to send through an external service, such as WhatsApp, is handled by that service.</p></section>
+      <section><h2>How We Use Your Information</h2><p>Information entered into forms is currently used on the page to check the details you provided; it is not transmitted through the website. Product selections support the enquiry cart. If online enquiry or catalogue services are introduced, the information you submit may be used to respond to your request, discuss products or projects, and provide requested catalogue materials. This policy will be updated if the website’s data practices change.</p></section>
+      <section><h2>Enquiries and Catalogue Downloads</h2><p>The enquiry cart stores selected product identifiers, SKU values and quantities in your browser so your selection remains available as you move around the site. Contact forms and catalogue request forms currently do not submit their contents. Catalogue files are not delivered by those forms at this time.</p><p>You may choose to contact the business using a WhatsApp link. Opening or using WhatsApp is optional and subject to WhatsApp’s own privacy terms. The website does not currently forward enquiry form data to Telegram or another manager messaging system.</p></section>
+      <section><h2>Cookies and Local Storage</h2><p>The website uses browser local storage for essential features, including the enquiry cart. A cookie notice preference is also stored in local storage after you select “I agree”; the preference expires six calendar months after it is recorded. These local storage entries are kept on your device and are not browser cookies.</p><p>The current frontend code does not include analytics or advertising pixels, embedded maps, or third-party widgets. Map directions and WhatsApp open as external links when you choose them. Your browser may apply its own storage and privacy settings.</p></section>
+      <section><h2>Sharing of Information</h2><p>Website form details are not currently sent to us through this site. When online services are enabled, information you submit may need to be shared with people or service providers involved in responding to your request. We will describe material changes to those arrangements in an updated policy. Information you provide directly to WhatsApp or another external service is governed by that service’s terms.</p></section>
+      <section><h2>Data Retention</h2><p>The enquiry cart has no automatic expiry in the current frontend and remains in local storage until you clear it or your browser removes it. The cookie notice preference expires six calendar months after it is recorded. We do not currently receive website form submissions, so this frontend does not establish a retention period for them.</p></section>
+      <section><h2>Data Security</h2><p>Information saved in local storage is held in your browser on your device, and its protection depends in part on the security of that device and browser. No method of storage or transmission can be described as completely secure, and we do not make a guarantee that information will be protected in every circumstance. Avoid entering sensitive personal information in website forms.</p></section>
+      <section><h2>Your Privacy Rights</h2><p>Depending on your location and circumstances, you may have rights concerning personal information, such as asking about it, requesting access or correction, or asking for deletion. Since website forms currently do not transmit their contents, you can clear locally stored website data through your browser settings. For other privacy questions, please contact us using the details on our <Link href="/contacts">Contact Us page</Link>.</p></section>
+      <section><h2>Third-Party Websites and Services</h2><p>The website may link to third-party websites and services, including WhatsApp and external map directions. We do not control their privacy practices. Review the relevant provider’s privacy information before using those services.</p></section>
+      <section><h2>Changes to This Privacy Policy</h2><p>We may update this policy when website features or data practices change. The current version will be published on this page.</p></section>
+      <section><h2>Contact Us</h2><p>For questions about this policy or a privacy request, please use the contact information on our <Link href="/contacts">Contact Us page</Link>.</p></section>
+    </article>
+  </Container>;
+}

@@ -21,7 +21,7 @@ export function SubmissionFields({ form, label, catalogue = false, compact = fal
   return <>
     {!compact && <p className={styles.note}>Online submission is not available yet. Your details stay on this page and are not sent.{catalogue ? ' PDF download will be available after online submission is connected.' : ''}</p>}
     <Button type="submit" fullWidth loading={form.pending} disabled={form.pending} className={`${styles.submit}${compact ? ` ${styles.compactSubmit}` : ''}`}>{label}</Button>
-    {privacyNotice && <p className={styles.privacyNotice}>By submitting this form, you agree to the <a href="https://potsandplanters.ae/private-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>}
+    {privacyNotice && <p className={styles.privacyNotice}>By submitting this form, you agree to the <a href="/private-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>}
     {form.notice && <p className={styles.notice} role={form.failed ? 'alert' : 'status'} aria-atomic="true">{form.notice}</p>}
   </>;
 }

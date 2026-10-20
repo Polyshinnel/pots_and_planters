@@ -20,6 +20,7 @@ export function SiteFooter() {
           <Title order={2} size="h4" mb="sm">Explore</Title>
           <Stack gap="xs" align="flex-start">
             {siteConfig.navigation.map((item) => <Link key={item.label} href={item.href} className={styles.footerLink}>{item.label}</Link>)}
+            <Link href="/private-policy" className={styles.footerLink}>Privacy Policy</Link>
           </Stack>
         </nav>
         <Stack gap="sm">

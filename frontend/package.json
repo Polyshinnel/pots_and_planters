@@ -11,7 +11,9 @@
     "start": "node .next/standalone/server.js",
     "typecheck": "tsc --noEmit",
     "test:catalog": "node tests/catalog.test.cjs",
-    "test:product": "node tests/product-detail.test.cjs"
+    "test:product": "node tests/product-detail.test.cjs",
+    "test:enquiry": "node tests/enquiry.test.cjs",
+    "test:forms": "node tests/forms.test.cjs"
   },
   "dependencies": {
     "@fancyapps/ui": "^6.1.15",

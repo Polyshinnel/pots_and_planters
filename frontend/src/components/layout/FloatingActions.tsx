@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { siteConfig } from '@/config/site';
 import styles from './Layout.module.css';
 
-export function FloatingActions({ hidden, home = false }: { hidden: boolean; home?: boolean }) {
+export function FloatingActions({ hidden, home = false, hideOnMobile = false }: { hidden: boolean; home?: boolean; hideOnMobile?: boolean }) {
   const [pastViewport, setPastViewport] = useState(false);
   useEffect(() => {
     if (!home) return;
@@ -30,7 +30,7 @@ export function FloatingActions({ hidden, home = false }: { hidden: boolean; hom
     };
   }, [home]);
   const isHidden = hidden || (home && !pastViewport);
-  return <aside aria-label="Quick actions" className={`${styles.floating} ${isHidden ? styles.floatingHidden : ''}`} aria-hidden={isHidden} inert={isHidden}>
+  return <aside aria-label="Quick actions" className={`${styles.floating} ${isHidden ? styles.floatingHidden : ''} ${hideOnMobile ? styles.floatingMobileHidden : ''}`} aria-hidden={isHidden} inert={isHidden}>
     <div className={styles.floatingItem}>
       {siteConfig.whatsappUrl
         ? <a className={styles.floatingButton} href={siteConfig.whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp (opens in a new tab)">

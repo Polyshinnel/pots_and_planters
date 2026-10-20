@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react';
-import Link from 'next/link';
 import type { Swiper as SwiperInstance } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import type { CataloguePreview } from '@/types/home';
+import { CatalogueDownloadDialog } from '@/components/forms/CatalogueDownloadForm';
 import { HomeImage } from './HomeImage';
 import { homeImageSizes } from './image-sizes';
 import styles from './Home.module.css';
@@ -13,6 +13,7 @@ import styles from './Home.module.css';
 export function HomeCataloguesSlider({ catalogues }: { catalogues: CataloguePreview[] }) {
   const [swiper, setSwiper] = useState<SwiperInstance | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedCatalogue, setSelectedCatalogue] = useState<CataloguePreview | null>(null);
 
   return <>
     <Swiper
@@ -31,10 +32,13 @@ export function HomeCataloguesSlider({ catalogues }: { catalogues: CataloguePrev
       }}
     >
       {catalogues.map((catalogue) => <SwiperSlide key={catalogue.id} className={styles.catalogueSlide}>
-        <Link href="/catalogues" className={styles.catalogueCard}>
+        {catalogue.downloadUrl ? <a href={catalogue.downloadUrl} download className={styles.catalogueCard}>
           <div className={styles.catalogueImage}><HomeImage image={catalogue.image} sizes={homeImageSizes.catalogue} /></div>
           <h3>{catalogue.title}</h3>
-        </Link>
+        </a> : <button type="button" className={styles.catalogueCard} onClick={() => setSelectedCatalogue(catalogue)} aria-label={`Get ${catalogue.title} catalogue`}>
+          <div className={styles.catalogueImage}><HomeImage image={catalogue.image} sizes={homeImageSizes.catalogue} /></div>
+          <h3>{catalogue.title}</h3>
+        </button>}
       </SwiperSlide>)}
     </Swiper>
     <div className={styles.catalogueControls}>
@@ -62,5 +66,11 @@ export function HomeCataloguesSlider({ catalogues }: { catalogues: CataloguePrev
         </button>
       </div>
     </div>
+    {selectedCatalogue && <CatalogueDownloadDialog
+      opened
+      onClose={() => setSelectedCatalogue(null)}
+      source={{ pagePath: '/', placement: 'home_catalogues' }}
+      catalogue={{ id: selectedCatalogue.id, title: selectedCatalogue.title, coverImage: selectedCatalogue.image.src }}
+    />}
   </>;
 }

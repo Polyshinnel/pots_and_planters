@@ -6,6 +6,10 @@ import { selectProducts } from './domain';
 import { selectRelatedProducts } from './product-detail';
 
 // Local adapter only. Keep fixture imports out of UI; replace this adapter in stage 3.
+export function resolveEnquiryProduct(productId: string, sku: string) {
+  return products.find((product) => product.published && product.id === productId && product.sku === sku);
+}
+
 export const catalogRepository: CatalogRepository = {
   async getCatalogues() { return selectCatalogues(catalogues); },
   async getCataloguesByCategory(categoryId) { return selectCatalogues(catalogues, categoryId); },

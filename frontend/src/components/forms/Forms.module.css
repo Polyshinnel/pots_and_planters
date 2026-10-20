@@ -1,0 +1,41 @@
+.form { display: grid; gap: 16px; min-width: 0; }
+.fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; min-width: 0; }
+.fields > *, .form > * { min-width: 0; }
+.context { display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid var(--mantine-color-gray-3); border-radius: var(--mantine-radius-sm); overflow-wrap: anywhere; }
+.context img { width: 128px; height: 80px; object-fit: contain; flex-shrink: 0; }
+.context p { margin: 0 0 6px; }
+.context .contextTitle { margin-bottom: 6px; font-size: 18px; line-height: 1.25; }
+.context .contextDescription { margin: 0; color: var(--mantine-color-gray-7); font-size: 14px; line-height: 1.4; }
+.context dl { margin: 8px 0 0; font-size: 14px; }
+.context dt { font-weight: 600; }
+.context dd { margin: 0 0 6px; }
+@media (min-width: 36em) {
+  .context dl { display: flex; align-items: baseline; gap: 16px; }
+  .context dl > div { display: flex; gap: 4px; }
+  .context dd { margin: 0; }
+}
+.note { margin: 0; color: var(--mantine-color-gray-7); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
+.notice { margin: 0; padding: 16px; background: var(--mantine-color-olive-0); border-radius: var(--mantine-radius-sm); overflow-wrap: anywhere; }
+.submit { height: auto; min-height: 50px; margin-top: 8px; }
+.submit span { white-space: normal; }
+@media (max-width: 35.999em) { .fields { grid-template-columns: minmax(0, 1fr); } }
+
+.contactForm { max-width: 560px; margin-inline: auto; }
+.contactForm .fields { grid-template-columns: minmax(0, 1fr); }
+
+.contactMessage { margin-bottom: 12px; }
+.compactModalHeader { min-height: 48px; padding: 10px 16px; }
+.compactModalTitle { position: relative; top: 8px; font-size: 23px; line-height: 1.15; font-weight: 600; }
+.compactModalBody { padding: 8px 16px 12px; }
+@media (max-width: 35.999em) {
+  .compactForm { gap: 8px; }
+  .compactFields { gap: 8px; }
+  .compactNote { font-size: 12px; line-height: 1.3; }
+  .compactSubmit { min-height: 42px; }
+  .compactFields :global(.mantine-InputWrapper-description) { display: none; }
+  .compactForm :global(.mantine-Textarea-input) { min-height: 64px; }
+  .compactNote { max-width: 360px; }
+}
+
+.privacyNotice { margin: 0; color: var(--mantine-color-gray-7); font-size: 12px; line-height: 1.4; text-align: center; }
+.privacyNotice a { color: var(--mantine-color-olive-8); text-decoration: underline; text-underline-offset: 2px; }

@@ -1,4 +1,9 @@
 .page { padding-top: 24px; padding-bottom: 80px; overflow-wrap: anywhere; }
+.page > h1 { margin: 0 0 12px; font-size: clamp(30px, 4vw, 44px); line-height: 1.15; font-weight: 600; }
+.intro { max-width: 820px; margin: 0; color: #55564f; line-height: 1.7; }
+.benefits { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 0; margin: 18px 0 32px; list-style: none; color: #42443a; font-size: 14px; }
+.benefits li { display: inline-flex; align-items: center; gap: 8px; }
+.benefits svg { color: #777b66; flex: 0 0 auto; }
 .breadcrumb ol { display: flex; flex-wrap: wrap; gap: 8px; padding: 0; margin: 0 0 28px; list-style: none; font-size: 14px; }
 .breadcrumb li + li::before { content: '/'; margin-right: 8px; color: #777; }
 .breadcrumb a { color: var(--mantine-color-olive-8); }
@@ -46,6 +51,7 @@
 }
 @media (max-width: 35.999em) {
   .page { padding-top: 20px; }
+  .benefits { gap: 10px 18px; margin: 16px 0 24px; }
   .breadcrumb ol { margin-bottom: 20px; font-size: 13px; }
   .actions { padding-right: 64px; }
   .buttons button { font-size: 14px; padding-inline: 8px; }

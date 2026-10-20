@@ -53,7 +53,7 @@ export default async function ProductPage({ params }: Props) {
           <dl className={styles.specs}>{specifications.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
         </section>}
         <p className={styles.price}>{formatPrice(product.priceVerified === false ? null : product.priceAed)}</p>
-        <ProductActions key={product.id} product={{ id: product.id, sku: product.sku, slug: product.slug, name: product.name, categoryId: category.id }} />
+        <ProductActions key={product.id} product={{ id: product.id, sku: product.sku, slug: product.slug, name: product.name, categoryId: category.id, image: productImages(product)[0]?.src, specifications }} />
       </section>
     </div>
     <ProductDescription heading={product.descriptionHeading} paragraphs={product.descriptionParagraphs} />

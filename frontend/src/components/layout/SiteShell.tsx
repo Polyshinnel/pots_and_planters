@@ -7,6 +7,7 @@ import { HomeLayout } from '@/components/home/HomeLayout';
 import { SiteHeader } from './SiteHeader';
 import { FloatingActions } from './FloatingActions';
 import styles from './Layout.module.css';
+import { ENQUIRY_PATH } from '@/lib/enquiry/domain';
 
 export function SiteShell({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
   const theme = useMantineTheme();
@@ -25,6 +26,6 @@ export function SiteShell({ children, footer }: { children: React.ReactNode; foo
     <SiteHeader opened={menuOpened} setOpened={setMenuOpened} />
     <main id="main-content" tabIndex={-1} className={styles.main}>{children}</main>
     {footer}
-    <FloatingActions hidden={menuOpened} />
+    <FloatingActions hidden={menuOpened} hideOnMobile={pathname === ENQUIRY_PATH} />
   </div>;
 }

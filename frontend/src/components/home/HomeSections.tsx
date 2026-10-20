@@ -32,7 +32,7 @@ export function HomeHero() {
         <p className={styles.eyebrow}>{copy.eyebrow}</p><h1 id="home-title">{copy.title}</h1>
         <p className={styles.description}>{copy.description}</p>
         <div className={styles.actions}>
-          <a className={`${styles.button} ${styles.heroButton}`} href="/#contact-cta">Discuss Your Project <IconArrowUpRight size={20} stroke={1.5} aria-hidden="true" /></a>
+          <ProjectContactLink hero />
           <Link href="/shop" className={styles.secondaryButton}>Explore Collection <span aria-hidden="true">↗</span></Link>
         </div>
       </div>

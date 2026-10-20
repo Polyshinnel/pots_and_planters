@@ -1,7 +1,9 @@
 'use client';
 
 import { useSyncExternalStore } from 'react';
-import { addEnquiryItem, ENQUIRY_STORAGE_KEY, readEnquiry, type EnquiryItem } from './domain';
+import { addEnquiryItem, ENQUIRY_STORAGE_KEY, ENQUIRY_STORAGE_VERSION, MAX_ENQUIRY_QUANTITY, readEnquiry, setEnquiryQuantity, type EnquiryItem } from './domain';
+
+import { deriveEnquiry } from './lines';
 
 type Snapshot = { items: readonly EnquiryItem[]; hydrated: boolean; persistent: boolean };
 const empty: Snapshot = { items: [], hydrated: false, persistent: true };
@@ -32,23 +34,43 @@ function subscribe(listener: () => void) {
   };
 }
 
+function commit(items: readonly EnquiryItem[]) {
+  let persistent = true;
+  try { window.localStorage.setItem(ENQUIRY_STORAGE_KEY, JSON.stringify({ version: ENQUIRY_STORAGE_VERSION, items })); }
+  catch { persistent = false; }
+  snapshot = { items, hydrated: true, persistent };
+  emit();
+  return { persistent };
+}
+function hydrate() { if (!snapshot.hydrated) readStorage(); }
+
 /** One SKU identifies one concrete variant. No names, prices or availability are persisted. */
 export const enquiryStore = {
   getItems: () => snapshot.items,
   getTotalQuantity: () => snapshot.items.reduce((total, item) => total + item.quantity, 0),
   addItem(productId: string, sku: string, quantity: number) {
-    if (!snapshot.hydrated) readStorage();
-    const items = addEnquiryItem(snapshot.items, { productId, sku, quantity });
-    let persistent = true;
-    try { window.localStorage.setItem(ENQUIRY_STORAGE_KEY, JSON.stringify({ version: 1, items })); }
-    catch { persistent = false; }
-    snapshot = { items, hydrated: true, persistent };
-    emit();
-    return { persistent };
+    hydrate();
+    return commit(addEnquiryItem(snapshot.items, { productId, sku, quantity }));
   },
+  setQuantity(sku: string, quantity: number) {
+    hydrate();
+    return commit(setEnquiryQuantity(snapshot.items, sku, quantity));
+  },
+  increment(sku: string) {
+    hydrate();
+    const item = snapshot.items.find((line) => line.sku === sku);
+    if (item) return commit(setEnquiryQuantity(snapshot.items, sku, Math.min(MAX_ENQUIRY_QUANTITY, item.quantity + 1)));
+  },
+  decrement(sku: string) {
+    hydrate();
+    const item = snapshot.items.find((line) => line.sku === sku);
+    if (item) return commit(setEnquiryQuantity(snapshot.items, sku, Math.max(1, item.quantity - 1)));
+  },
+  removeItem(sku: string) { hydrate(); return commit(snapshot.items.filter((line) => line.sku !== sku)); },
+  clearCart() { hydrate(); return commit([]); },
 };
 
 export function useEnquiry() {
   const state = useSyncExternalStore(subscribe, () => snapshot, () => empty);
-  return { ...state, totalQuantity: state.items.reduce((total, item) => total + item.quantity, 0) };
+  return { ...state, ...deriveEnquiry(state.items) };
 }

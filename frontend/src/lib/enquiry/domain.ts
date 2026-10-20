@@ -1,5 +1,6 @@
 export const ENQUIRY_PATH = '/cart';
 export const ENQUIRY_STORAGE_KEY = 'potsandplanters.enquiry.v1';
+export const ENQUIRY_STORAGE_VERSION = 1;
 /** Input/storage bound, unrelated to stock or minimum order quantities. */
 export const MAX_ENQUIRY_QUANTITY = 999999;
 export type EnquiryItem = { productId: string; sku: string; quantity: number };
@@ -9,7 +10,7 @@ export function readEnquiry(raw: string | null): EnquiryItem[] {
   if (!raw) return [];
   try {
     const data: unknown = JSON.parse(raw);
-    if (!data || typeof data !== 'object' || !('version' in data) || data.version !== 1 || !('items' in data) || !Array.isArray(data.items)) return [];
+    if (!data || typeof data !== 'object' || !('version' in data) || data.version !== ENQUIRY_STORAGE_VERSION || !('items' in data) || !Array.isArray(data.items)) return [];
     const items = new Map<string, EnquiryItem>();
     for (const entry of data.items.slice(0, 1000)) {
       if (!entry || typeof entry !== 'object' || typeof entry.productId !== 'string' || !entry.productId.trim()
@@ -21,6 +22,11 @@ export function readEnquiry(raw: string | null): EnquiryItem[] {
     }
     return [...items.values()];
   } catch { return []; }
+}
+
+export function setEnquiryQuantity(items: readonly EnquiryItem[], sku: string, quantity: number): EnquiryItem[] {
+  if (!validQuantity(quantity)) throw new Error('Enter a valid whole quantity.');
+  return items.map((item) => item.sku === sku ? { ...item, quantity } : item);
 }
 
 export function addEnquiryItem(items: readonly EnquiryItem[], item: EnquiryItem): EnquiryItem[] {

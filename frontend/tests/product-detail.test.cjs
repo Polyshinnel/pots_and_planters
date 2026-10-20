@@ -65,7 +65,7 @@ test('WhatsApp uses config, encoding, SKU, quantity and absolute URL', () => {
   assert.equal(productWhatsAppUrl('javascript:bad', product, 2, 'https://example.test'), null);
   const url = new URL(productWhatsAppUrl('https://wa.me/971500000000', { ...product, name: 'A & B / planter' }, 3, 'https://example.test'));
   assert.equal(url.pathname, '/971500000000');
-  for (const text of ['A & B / planter', 'Model: 25526', 'quantity: 3', 'https://example.test/product/coral-planter-25526']) assert.ok(url.searchParams.get('text').includes(text));
+  for (const text of ['A & B / planter', 'Model: 25526', 'quantity: 3', 'https://example.test/shop/outdoor-pots/coral-planter-25526']) assert.ok(url.searchParams.get('text').includes(text));
 });
 test('shared store persists and keeps selection in memory when storage fails', () => {
   let saved = null;

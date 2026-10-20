@@ -4,16 +4,15 @@ import { useState } from 'react';
 import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react';
 import type { Swiper as SwiperInstance } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import type { CataloguePreview } from '@/types/home';
-import { CatalogueDownloadDialog } from '@/components/forms/CatalogueDownloadForm';
-import { HomeImage } from './HomeImage';
-import { homeImageSizes } from './image-sizes';
+import type { Catalogue } from '@/types/catalog';
+import { CatalogueCard } from '@/components/catalogues/CatalogueCard';
+import { useCatalogueDownload } from '@/components/catalogues/useCatalogueDownload';
 import styles from './Home.module.css';
 
-export function HomeCataloguesSlider({ catalogues }: { catalogues: CataloguePreview[] }) {
+export function HomeCataloguesSlider({ catalogues }: { catalogues: Catalogue[] }) {
   const [swiper, setSwiper] = useState<SwiperInstance | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const [selectedCatalogue, setSelectedCatalogue] = useState<CataloguePreview | null>(null);
+  const { openCatalogue, dialog } = useCatalogueDownload({ pagePath: '/', placement: 'home_catalogues' });
 
   return <>
     <Swiper
@@ -32,13 +31,7 @@ export function HomeCataloguesSlider({ catalogues }: { catalogues: CataloguePrev
       }}
     >
       {catalogues.map((catalogue) => <SwiperSlide key={catalogue.id} className={styles.catalogueSlide}>
-        {catalogue.downloadUrl ? <a href={catalogue.downloadUrl} download className={styles.catalogueCard}>
-          <div className={styles.catalogueImage}><HomeImage image={catalogue.image} sizes={homeImageSizes.catalogue} /></div>
-          <h3>{catalogue.title}</h3>
-        </a> : <button type="button" className={styles.catalogueCard} onClick={() => setSelectedCatalogue(catalogue)} aria-label={`Get ${catalogue.title} catalogue`}>
-          <div className={styles.catalogueImage}><HomeImage image={catalogue.image} sizes={homeImageSizes.catalogue} /></div>
-          <h3>{catalogue.title}</h3>
-        </button>}
+        <CatalogueCard catalogue={catalogue} onOpen={openCatalogue} variant="home" />
       </SwiperSlide>)}
     </Swiper>
     <div className={styles.catalogueControls}>
@@ -66,11 +59,6 @@ export function HomeCataloguesSlider({ catalogues }: { catalogues: CataloguePrev
         </button>
       </div>
     </div>
-    {selectedCatalogue && <CatalogueDownloadDialog
-      opened
-      onClose={() => setSelectedCatalogue(null)}
-      source={{ pagePath: '/', placement: 'home_catalogues' }}
-      catalogue={{ id: selectedCatalogue.id, title: selectedCatalogue.title, coverImage: selectedCatalogue.image.src }}
-    />}
+    {dialog}
   </>;
 }

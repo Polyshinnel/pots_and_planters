@@ -34,10 +34,9 @@ export interface ProjectSolution {
   description: string;
 }
 
+/** Image preview used by the inspiration lightbox. */
 export interface CataloguePreview {
   id: string;
   title: string;
   image: HomeImage;
-  /** Published PDF URL; when present, the home card downloads the catalogue directly. */
-  downloadUrl?: string;
 }

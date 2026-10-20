@@ -2,7 +2,7 @@ export type Category = {
   id: string; slug: string; path: string; name: string; heading: string; seoTitle: string; description: string;
 };
 export type Catalogue = {
-  id: string; slug: string; title: string; description: string; coverImage: string;
+  id: string; slug: string; title: string; description: string; coverImage: string; coverAlt?: string;
   categoryIds: string[]; isPublished: boolean;
 };
 export const filterKeys = ['material', 'color', 'size', 'usage'] as const;

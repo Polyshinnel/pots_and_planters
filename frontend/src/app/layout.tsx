@@ -21,6 +21,13 @@ const lato = localFont({
 export const metadata: Metadata = {
   title: 'Pots & Planters — Layout preview',
   description: 'Pots & Planters shared layout preview.',
+  manifest: '/site.webmanifest',
+  icons: {
+    icon: [
+      { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+      { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

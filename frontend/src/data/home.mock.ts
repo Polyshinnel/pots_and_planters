@@ -1,4 +1,5 @@
-import type { CataloguePreview, HomeCategory, ProductPreview, ProjectSolution } from '@/types/home';
+import { catalogues } from './catalogues.mock';
+import type { HomeCategory, ProductPreview, ProjectSolution } from '@/types/home';
 
 // FE-02 local editorial data. Replace this module with an API adapter in a later stage.
 // Sources and asset gaps: docs/frontend/FE-02-home-inventory.md.
@@ -46,12 +47,4 @@ export const featuredProducts: ProductPreview[] = [
   { id: 'featured-08', slug: 'silver-bowl-planter-08', name: 'Silver bowl planter', sku: 'PP-523', image: { src: '/images/home/products/product-8.webp', alt: 'Low rounded silver planter' }, price: { amount: 1100, currency: 'AED' } },
 ];
 
-export const homeCatalogues: CataloguePreview[] = [
-  { id: 'royal', title: 'Royal Planters', image: homeCopy.hero.image },
-  { id: 'plants', title: 'Lifelike Plants', image: { src: '/images/home/lifelike-plants.jpg', alt: 'Lifelike Plants catalogue cover with a white orchid arrangement' } },
-  { id: 'trees', title: 'Lifelike Trees', image: { src: '/images/home/lifelike-trees.jpg', alt: 'Lifelike Trees catalogue cover with detailed green foliage' } },
-  { id: 'cacti', title: 'Lifelike Cacti', image: { src: '/images/home/lifelike-cacti.jpg', alt: 'Lifelike Cacti catalogue cover showing tall cacti against an interior wall' } },
-  { id: 'project', title: 'Project Catalogue', image: { src: '/images/home/project-catalogue.jpg', alt: 'Project Catalogue of Lifelike Plants cover with softly focused leaves' } },
-  { id: 'trees-cacti', title: 'Trees & Cacti', image: { src: '/images/home/trees-and-cacti.jpg', alt: 'Lifelike Trees and Cacti catalogue cover showing potted cacti beside a sofa' } },
-];
-
+export const homeCatalogues = catalogues.filter((catalogue) => catalogue.isPublished);

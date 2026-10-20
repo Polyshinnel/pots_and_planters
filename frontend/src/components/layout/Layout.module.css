@@ -44,8 +44,8 @@
 .footer { border-top: 1px solid var(--mantine-color-gray-3); padding-top: var(--mantine-spacing-xl); scroll-margin-top: 16px; }
 .footerGrid { display: grid; grid-template-columns: 2fr 1fr 2fr; gap: var(--mantine-spacing-xl); }
 .footerBrand { grid-column: 1 / -1; }
-.footerLink { color: var(--mantine-color-black); text-decoration: none; font-size: 14px; text-underline-offset: 4px; }
-.footerLink:hover { text-decoration: underline; }
+.footerLink, .footerContacts a { color: var(--mantine-color-black); text-decoration: none; font-size: 14px; text-underline-offset: 4px; }
+.footerLink:hover, .footerContacts a:hover { text-decoration: underline; }
 .footerBottom { background: #000; color: #c3c1c1; padding-block: var(--mantine-spacing-lg); text-align: center; }
 .floating { position: fixed; right: calc(24px + env(safe-area-inset-right, 0px)); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); z-index: var(--floating-layer); display: flex; flex-direction: column; align-items: center; gap: 16px; }
 .floating { opacity: 1; transform: translateY(0); transition: opacity 240ms ease, transform 240ms ease; }

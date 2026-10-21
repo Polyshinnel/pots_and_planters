@@ -1,4 +1,3 @@
-import { catalogues } from './catalogues.mock';
 import type { HomeCategory, ProductPreview, ProjectSolution } from '@/types/home';
 
 // FE-02 local editorial data. Replace this module with an API adapter in a later stage.
@@ -25,7 +24,6 @@ export const homeCategories: HomeCategory[] = [
   { id: 'indoor', name: 'Indoor Pots', description: 'Forms and finishes for considered interiors.', href: '/shop/indoor-pots', image: { src: '/images/home/categories/indoor-planters.webp', alt: 'Decorative indoor planters with flowering plants in a bright interior' } },
   { id: 'artificial', name: 'Artificial Plants', description: 'Explore lifelike plants and trees.', href: '/shop/artificial-plants', image: { src: '/images/home/categories/artificial-plants.webp', alt: 'Potted artificial trees arranged in a contemporary interior' } },
 ];
-
 export const projectSolutions: ProjectSolution[] = [
   { id: 'selection', title: 'Project selection', description: 'Get help selecting pots, planters and artificial greenery for your project.' },
   { id: 'placement', title: 'On-site planter placement', description: 'Ask whether temporary on-site placement is available for your project.' },
@@ -46,5 +44,3 @@ export const featuredProducts: ProductPreview[] = [
   { id: 'featured-07', slug: 'bronze-bowl-planter-07', name: 'Bronze bowl planter', sku: 'PP-522', image: { src: '/images/home/products/product-7.webp', alt: 'Low rounded bronze planter with a softly aged finish' }, price: { amount: 620, currency: 'AED' } },
   { id: 'featured-08', slug: 'silver-bowl-planter-08', name: 'Silver bowl planter', sku: 'PP-523', image: { src: '/images/home/products/product-8.webp', alt: 'Low rounded silver planter' }, price: { amount: 1100, currency: 'AED' } },
 ];
-
-export const homeCatalogues = catalogues.filter((catalogue) => catalogue.isPublished);

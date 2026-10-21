@@ -334,12 +334,12 @@ export const newsArticles: NewsArticle[] = [
       }
     ],
     "originalCopy": "Exiting news\n\nPots&Planters will take participation at INDEX Dubai 2025, the region’s leading interior design and fit-out exhibition.\n\n27–29 May 2025\n\nDubai World Trade Centre\n\nVisit us at stand number 6E272\n\nWe’re bringing our latest collection of planters and design-forward green solutions – perfect for elevating any interior or outdoor space.\n\nWhether you're an architect, designer, buyer, or plant lover – we'd love to meet you. Let’s connect, get inspired, and grow together.\n\nSee you soon!",
-    "coverImage": "/images/news/5.png",
+    "coverImage": "/images/news/5_new.png",
     "coverAlt": "INDEX Dubai exhibition artwork showing 27–29 May, Dubai World Trade Centre and stand 6E272",
     "sourceImage": {
-      "filename": "5.png",
-      "width": 848,
-      "height": 848
+      "filename": "5_new.png",
+      "width": 619,
+      "height": 619
     },
     "category": "Events & Exhibitions",
     "publishedAt": "2025-05-26",

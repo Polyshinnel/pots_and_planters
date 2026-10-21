@@ -2,7 +2,8 @@ import { Container } from '@mantine/core';
 import Image from 'next/image';
 import { IconArrowUpRight, IconBuildingStore, IconPackage, IconRulerMeasure, IconTruckDelivery } from '@tabler/icons-react';
 import Link from 'next/link';
-import { featuredProducts, homeCatalogues, homeCopy, projectSolutions } from '@/data/home.mock';
+import { featuredProducts, homeCopy, projectSolutions } from '@/data/home.mock';
+import { catalogRepository } from '@/lib/catalog/repository';
 import type { Category } from '@/types/catalog';
 import { HomeImage } from './HomeImage';
 import { homeImageSizes } from './image-sizes';
@@ -70,7 +71,8 @@ export function FeaturedProducts() {
   </Container></section>;
 }
 
-export function HomeCatalogues() {
+export async function HomeCatalogues() {
+  const homeCatalogues = await catalogRepository.getCatalogues();
   return <section className={`${styles.section} ${styles.softSection}`} aria-labelledby="catalogues-title"><Container>
     <div className={styles.headingRow}><SectionHeading id="catalogues-title" copy={homeCopy.catalogues} /><Link href="/catalogues" className={styles.button}>View Catalogues <IconArrowUpRight size={20} stroke={1.5} aria-hidden="true" /></Link></div>
     <HomeCataloguesSlider catalogues={homeCatalogues} />

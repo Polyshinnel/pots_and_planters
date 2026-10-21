@@ -12,6 +12,8 @@ export type SolutionCategory = {
   image: { src: string; alt: string };
   collections: Pick<Category, 'id' | 'name' | 'path'>[];
 };
+/** Editorial solution content keeps stable category IDs; public category data is resolved from the API. */
+export type SolutionCategorySource = Omit<SolutionCategory, 'collections'> & { collectionIds: string[] };
 export type Solution = SolutionCategory;
 export type SolutionImage = {
   id: string; src: string; alt: string; width: number; height: number; sortOrder: number; caption?: string;
@@ -35,6 +37,6 @@ export type ResolvedSolutionScene = Omit<SolutionScene, 'items'> & {
   items: (SolutionItem & { product?: Product; href?: string })[];
 };
 export interface SolutionsRepository {
-  getSolutionCategories(): Promise<SolutionCategory[]>;
+  getSolutionCategories(): Promise<SolutionCategorySource[]>;
   getSolutionScenes(categoryId: string): Promise<ResolvedSolutionScene[]>;
 }

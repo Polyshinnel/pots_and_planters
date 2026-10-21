@@ -17,8 +17,9 @@ export function CategoryCataloguesCTA({ catalogues, category }: {
 
   return <Paper component="section" aria-label="Product catalogues" className={styles.banner}>
     <div className={styles.cover}>
-      <Image src={catalogue.coverImage} alt={`${catalogue.title} catalogue cover`} fill
-        sizes="(max-width: 575px) calc(100vw - 64px), 280px" className={styles.image} />
+      {catalogue.coverImage && <Image src={catalogue.coverImage} alt={catalogue.coverAlt ?? `${catalogue.title} catalogue cover`} fill
+        sizes="(max-width: 575px) calc(100vw - 64px), 280px" className={styles.image}
+        unoptimized={catalogue.coverImage.includes('/storage/')} />}
     </div>
     <div className={styles.content}>
       <Text className={styles.eyebrow}>PRODUCT CATALOGUES</Text>

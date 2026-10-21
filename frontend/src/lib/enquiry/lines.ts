@@ -1,11 +1,11 @@
-import { resolveEnquiryProduct } from '@/lib/catalog/repository';
+import { products } from '@/data/catalog.mock';
 import { productImages, productSpecifications } from '@/lib/catalog/product-detail';
 import { productPath } from '@/lib/catalog/domain';
 import type { EnquiryItem } from './domain';
 
 /** Display data is resolved from the catalogue, never trusted from browser storage. */
 export function resolveEnquiryLine(item: EnquiryItem) {
-  const product = resolveEnquiryProduct(item.productId, item.sku);
+  const product = products.find((candidate) => candidate.published && candidate.id === item.productId && candidate.sku === item.sku);
   // Mock catalogue prices are still useful for the enquiry estimate even though
   // they are unverified; the totals UI clearly labels them as informational.
   const price = product?.priceAed;

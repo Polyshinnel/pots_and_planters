@@ -1,4 +1,3 @@
-import { Suspense } from 'react';
 import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import Link from 'next/link';
 import { Container } from '@mantine/core';
@@ -12,8 +11,15 @@ import styles from '@/components/catalogues/Catalogues.module.css';
 export const generateMetadata = () => getStaticPageMetadata('catalogues');
 export const dynamic = 'force-dynamic';
 
-export default async function Catalogues() {
-  const [catalogues, categories] = await Promise.all([catalogRepository.getCatalogues(), getCategories()]);
+type SearchParams = Promise<{ category?: string | string[] }>;
+
+export default async function Catalogues({ searchParams }: { searchParams: SearchParams }) {
+  const query = await searchParams;
+  const categorySlug = Array.isArray(query.category) ? query.category[0] : query.category;
+  const [catalogues, categories] = await Promise.all([
+    categorySlug ? catalogRepository.getCataloguesByCategory(categorySlug) : catalogRepository.getCatalogues(),
+    getCategories(),
+  ]);
   const contact = getProjectContact('Hello Pots & Planters, I would like help selecting products from your catalogues for a project in the UAE.');
   return <Container className={pageStyles.page}>
     <nav aria-label="Breadcrumb" className={pageStyles.breadcrumb}><ol>
@@ -23,9 +29,7 @@ export default async function Catalogues() {
       <h1>Product Catalogues</h1>
       <p>Explore our product catalogues for outdoor and indoor planters, artificial plants and trees. Find ideas and suitable options for hospitality, commercial and residential projects across the UAE.</p>
     </header>
-    <Suspense fallback={<p role="status">Loading catalogues…</p>}>
-      <CataloguesListing catalogues={catalogues} categories={categories} />
-    </Suspense>
+    <CataloguesListing catalogues={catalogues} categories={categories} activeCategorySlug={categorySlug} />
     <section className={styles.project} aria-labelledby="catalogues-project-title">
       <h2 id="catalogues-project-title">Need help selecting products for your project?</h2>
       <p>Discuss sizes, finishes and quantities with our team, and get tailored recommendations for your hospitality, commercial or residential project.</p>

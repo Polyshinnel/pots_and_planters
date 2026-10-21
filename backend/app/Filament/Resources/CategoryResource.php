@@ -37,7 +37,8 @@ class CategoryResource extends Resource
                 TextInput::make('slug')->required()->maxLength(255)->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')->unique(ignoreRecord: true)->live(onBlur: true)
                     ->disabled(fn (?Category $record) => $record !== null)->dehydrated()->helperText(fn (?Category $record) => $record ? 'Category slugs are locked after creation to protect existing URLs.' : 'URL: /shop/{slug}'),
                 TextInput::make('heading')->label('H1')->required()->maxLength(255),
-                Textarea::make('description')->label('Intro text')->required()->rows(3),
+                Textarea::make('tile_description')->label('Category tile description')->required()->rows(2),
+                Textarea::make('description')->label('Category page intro')->required()->rows(3),
                 TextInput::make('intro_heading')->label('Long description heading')->maxLength(255),
                 Repeater::make('intro_paragraphs')->label('Long description')->simple(Textarea::make('paragraph')->required())->default([])->columnSpanFull(),
                 FileUpload::make('image_path')->label('Category image')->required(fn (Get $get): bool => $get('status') === 'published')->image()->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(5120)->disk('public')->directory('categories')->visibility('public')->imageEditor()->imagePreviewHeight('240'),

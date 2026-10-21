@@ -14,6 +14,8 @@ export function HomeCataloguesSlider({ catalogues }: { catalogues: Catalogue[] }
   const [activeIndex, setActiveIndex] = useState(0);
   const { openCatalogue, dialog } = useCatalogueDownload({ pagePath: '/', placement: 'home_catalogues' });
 
+  if (catalogues.length === 0) return <p role="status">No catalogues are available yet.</p>;
+
   return <>
     <Swiper
       className={styles.catalogueSwiper}

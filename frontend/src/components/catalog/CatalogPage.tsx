@@ -21,7 +21,7 @@ const categoryIntro: Record<string, { title: string; paragraphs: string[] }> = {
 export type SearchParams = Record<string, string | string[] | undefined>;
 export async function CatalogPage({ category, searchParams }: { category?: Category; searchParams: SearchParams }) {
   const categories = await getCategories();
-  const catalogues = await (category ? catalogRepository.getCataloguesByCategory(category.id) : catalogRepository.getCatalogues());
+  const catalogues = await (category ? catalogRepository.getCataloguesByCategory(category.slug) : catalogRepository.getCatalogues());
   const scope = await catalogRepository.getProducts({ categoryId: category?.id, filters: {}, sort: 'featured', page: 1, perPage: PAGE_SIZE });
   const params = new URLSearchParams();
   for (const [key, values] of Object.entries(searchParams)) for (const value of Array.isArray(values) ? values : values ? [values] : []) params.append(key, value);

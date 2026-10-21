@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { Container } from '@mantine/core';
+import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import { newsRepository } from '@/lib/news/repository';
-import { newsMetadata } from '@/lib/news/seo';
 import { NewsCard } from '@/components/news/NewsCard';
 import { NewsContact } from '@/components/news/NewsContact';
 import pageStyles from '@/components/catalog/Catalog.module.css';
 import styles from '@/components/news/News.module.css';
 
-export const metadata = newsMetadata();
+export const generateMetadata = () => getStaticPageMetadata('news');
 
 export default async function NewsPage() {
   const articles = await newsRepository.getPublished();

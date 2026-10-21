@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Container } from '@mantine/core';
 import { IconArrowUpRight } from '@tabler/icons-react';
 import { solutionsRepository } from '@/lib/solutions/repository';
+import { getCategories } from '@/lib/catalog/categories.server';
 import { SolutionSection } from '@/components/solutions/SolutionSection';
 import pageStyles from '@/components/catalog/Catalog.module.css';
 import aboutStyles from '@/components/about/About.module.css';
@@ -13,7 +14,17 @@ export const generateMetadata = () => getStaticPageMetadata('solutions');
 export const dynamic = 'force-dynamic';
 
 export default async function SolutionsPage() {
-  const solutions = await solutionsRepository.getSolutionCategories();
+  const [categoryData, solutionContent] = await Promise.all([
+    getCategories(),
+    solutionsRepository.getSolutionCategories(),
+  ]);
+  const solutions = solutionContent.map(({ collectionIds, ...solution }) => ({
+    ...solution,
+    collections: collectionIds.flatMap((id) => {
+      const category = categoryData.find((item) => item.id === id);
+      return category ? [{ id: category.id, name: category.name, path: category.path }] : [];
+    }),
+  }));
   const scenes = await Promise.all(solutions.map((solution) => solutionsRepository.getSolutionScenes(solution.id)));
   return <Container className={`${pageStyles.page} ${styles.page}`}>
     <nav aria-label="Breadcrumb" className={pageStyles.breadcrumb}><ol>

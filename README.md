@@ -67,7 +67,9 @@ backend/horizon/scheduler используют один образ, один н�
 У Laravel сохраняется `storage/app`; framework cache/views/log files не переносятся между релизами.
 PHP работает от `www-data`, storage и bootstrap/cache подготовлены при сборке.
 Production использует multi-stage builds, без bind mounts и runtime dev-зависимостей.
-`nginx` ждёт healthy backend и frontend; PHP-сервисы ждут healthy MariaDB и Redis.
+`nginx` ждёт healthy backend и запущенный frontend. Frontend использует nginx для серверных
+API-запросов, поэтому nginx запускается до прохождения frontend healthcheck; PHP-сервисы ждут
+healthy MariaDB и Redis.
 
 ## Первый запуск: только Docker
 

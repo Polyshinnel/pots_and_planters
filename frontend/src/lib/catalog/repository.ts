@@ -1,7 +1,5 @@
 import { products } from '@/data/catalog.mock';
-import { catalogues } from '@/data/catalogues.mock';
 import type { CatalogRepository } from '@/types/catalog';
-import { selectCatalogues } from './catalogues';
 import { selectProducts } from './domain';
 import { selectRelatedProducts } from './product-detail';
 
@@ -11,8 +9,12 @@ export function resolveEnquiryProduct(productId: string, sku: string) {
 }
 
 export const catalogRepository: CatalogRepository = {
-  async getCatalogues() { return selectCatalogues(catalogues); },
-  async getCataloguesByCategory(categoryId) { return selectCatalogues(catalogues, categoryId); },
+  async getCatalogues() {
+    return (await import('./catalogues.server')).getCatalogues();
+  },
+  async getCataloguesByCategory(categorySlug) {
+    return (await import('./catalogues.server')).getCataloguesByCategory(categorySlug);
+  },
   async getProductBySlug(slug) { return products.find((product) => product.published && product.slug === slug); },
   async getRelatedProducts(product, limit = 4) { return selectRelatedProducts(products, product, limit); },
   async getProducts(query) { return selectProducts(products, query); },

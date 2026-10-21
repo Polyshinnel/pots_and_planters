@@ -1,7 +1,4 @@
-import { categories } from '@/config/catalog';
-import type { SolutionCategory, SolutionScene } from '@/types/solutions';
-
-const collections = (...ids: ('outdoor' | 'indoor' | 'artificial')[]) => ids.map((id) => categories.find((category) => category.id === id)!);
+import type { SolutionCategorySource, SolutionScene } from '@/types/solutions';
 
 // Existing site imagery illustrates applications; these are not company case studies.
 // Content is independent of the Editorial layout so a Gallery can reuse it later.
@@ -13,7 +10,7 @@ const editorialCategories = [
     seoHeading: 'Planters & Artificial Greenery for Hotels and Hospitality',
     intro: "Hotel lobbies, reception areas, guest lounges and outdoor terraces call for greenery that complements the architecture and guest experience. Explore large statement planters, decorative indoor pots and artificial trees for different hospitality environments.\n\nBrowse our interior concepts to see how selected products can work together, review individual models and request a quotation based on your project's quantities and requirements.",
     image: { src: '/images/home/hero-desktop.webp', alt: 'Sculptural bronze planter with a tree beside a sunlit architectural entrance' },
-    collections: collections('outdoor', 'indoor', 'artificial'),
+    collectionIds: ['outdoor', 'indoor', 'artificial'],
   },
   {
     id: 'restaurants',
@@ -22,7 +19,7 @@ const editorialCategories = [
     seoHeading: 'Restaurant Planters for Dining Areas and Outdoor Terraces',
     intro: 'Planters can help define seating zones, frame entrances and introduce greenery into restaurant interiors and outdoor dining areas. Explore combinations of decorative pots and artificial plants for cafés, restaurants and hospitality venues.\n\nView suggested product arrangements, compare sizes and finishes, and build an enquiry for your restaurant or terrace project.',
     image: { src: '/images/about/project-lounge.jpg', alt: 'Yellow lounge seating framed by tall dark planters, greenery and metal mesh partitions' },
-    collections: collections('outdoor', 'indoor', 'artificial'),
+    collectionIds: ['outdoor', 'indoor', 'artificial'],
   },
   {
     id: 'offices',
@@ -31,7 +28,7 @@ const editorialCategories = [
     seoHeading: 'Office Planters & Artificial Trees for Commercial Interiors',
     intro: 'From reception desks and waiting areas to meeting rooms and shared workspaces, planters introduce natural forms into contemporary commercial interiors. Large floor pots and artificial greenery can help create focal points and visually define different areas.\n\nExplore product options for offices and corporate environments, then request a quotation for the quantities and finishes required by your project.',
     image: { src: '/images/home/categories/artificial-plants.webp', alt: 'Potted trees in dark rounded planters arranged against a neutral interior wall' },
-    collections: collections('indoor', 'artificial'),
+    collectionIds: ['indoor', 'artificial'],
   },
   {
     id: 'residential',
@@ -40,7 +37,7 @@ const editorialCategories = [
     seoHeading: 'Indoor & Outdoor Planters for Villas and Residential Projects',
     intro: 'Villas and residential developments offer opportunities to integrate planters into entrances, courtyards, patios, terraces and living spaces. The right proportions, finishes and plant combinations can complement both contemporary and traditional architecture.\n\nExplore indoor and outdoor collections, compare suitable models and discuss a coordinated selection for your residential project.',
     image: { src: '/images/home/categories/outdoor-pots.webp', alt: 'Three pale textured planters with clipped greenery on a timber terrace' },
-    collections: collections('outdoor', 'indoor', 'artificial'),
+    collectionIds: ['outdoor', 'indoor', 'artificial'],
   },
   {
     id: 'retail',
@@ -49,11 +46,11 @@ const editorialCategories = [
     seoHeading: 'Planters & Artificial Greenery for Retail and Public Spaces',
     intro: 'Shopping centres, retail interiors, galleries and shared public areas benefit from considered greenery that complements circulation routes and architectural features. Statement planters and artificial plants can create visual interest and help define welcoming spaces.\n\nExplore decorative options for commercial environments and request a tailored quotation for your project.',
     image: { src: '/images/home/categories/indoor-planters.webp', alt: 'Tall decorative bronze planters with flowering plants beside a bright window' },
-    collections: collections('indoor', 'outdoor', 'artificial'),
+    collectionIds: ['indoor', 'outdoor', 'artificial'],
   },
 ];
 
-export const solutions: SolutionCategory[] = editorialCategories.map((category, index) => ({
+export const solutions: SolutionCategorySource[] = editorialCategories.map((category, index) => ({
   ...category, slug: category.id, sortOrder: index, isPublished: true,
 }));
 

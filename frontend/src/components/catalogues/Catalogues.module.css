@@ -6,12 +6,20 @@
 .count { margin: 0 0 20px; color: var(--mantine-color-olive-8); font-size: 14px; }
 .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px 24px; }
 .card { display: flex; flex-direction: column; width: 100%; min-width: 0; padding: 0; border: 1px solid var(--mantine-color-olive-2); background: white; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.homeCard { height: 100%; }
+.homeCard .cardContent { gap: 8px; padding: 16px; }
+.homeCard .cardContent h3 { font-size: 18px; }
+.homeCard .cardContent h3 + p { margin-top: -8px; }
+.homeCard .cardContent p { font-size: 14px; line-height: 1.5; min-height: 4.5em; }
+.homeCard .download { padding-top: 4px; }
 .card:hover { border-color: var(--mantine-color-olive-5); box-shadow: var(--mantine-shadow-sm); }
 .cover { position: relative; width: 100%; aspect-ratio: 700 / 394; background: var(--mantine-color-olive-0); }
 .cardContent { display: flex; flex-direction: column; flex: 1; width: 100%; gap: 12px; padding: 20px; }
 .cardContent h2 { font-size: 22px; font-weight: 600; line-height: 1.3; margin: 0; }
 .cardContent h3 { font-size: 22px; font-weight: 600; line-height: 1.3; margin: 0; }
 .cardContent p { margin: 0; line-height: 1.6; }
+.homeCard .cardContent h3 { min-height: 2.6em; }
+.homeCard .cardContent p { display: -webkit-box; min-height: 4.8em; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
 .download { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin-top: auto; padding-top: 12px; color: var(--mantine-color-olive-8); font-weight: 700; }
 .empty { padding: 32px; background: var(--mantine-color-olive-0); }
 .empty h2 { margin-top: 0; }

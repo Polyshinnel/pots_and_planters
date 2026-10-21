@@ -1,10 +1,11 @@
 <?php
 
+use App\Http\Controllers\Api\CatalogueController;
+use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\PageSeoController;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\Api\PageSeoController;
-use App\Http\Controllers\Api\CategoryController;
 
 Route::get('/health', function () {
     try {
@@ -23,3 +24,4 @@ Route::get('/v1/page-seo/{pageKey}', [PageSeoController::class, 'show'])
     ->where('pageKey', '[a-z_]+');
 Route::get('/v1/categories', [CategoryController::class, 'index']);
 Route::get('/v1/categories/{slug}', [CategoryController::class, 'show'])->where('slug', '[a-z0-9-]+');
+Route::get('/v1/catalogues', [CatalogueController::class, 'index']);

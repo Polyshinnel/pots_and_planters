@@ -3,8 +3,9 @@ export type Category = {
   introHeading?: string | null; introParagraphs?: string[]; image?: string | null; imageAlt?: string | null; ogImage?: string | null; seoDescription?: string; tileDescription?: string;
 };
 export type Catalogue = {
-  id: string; slug: string; title: string; description: string; coverImage: string; coverAlt?: string;
-  categoryIds: string[]; isPublished: boolean;
+  id: string; slug: string; title: string; description: string | null; coverImage: string | null; coverAlt?: string | null;
+  categoryIds: string[]; isPublished: true;
+  categories?: { id: string; name: string; slug: string }[];
 };
 export const filterKeys = ['material', 'color', 'size', 'usage'] as const;
 export type FilterKey = typeof filterKeys[number];
@@ -32,7 +33,7 @@ export type CatalogResult = {
 /** Async boundary: the UI may consume a future HTTP implementation without fixture imports. */
 export interface CatalogRepository {
   getCatalogues(): Promise<Catalogue[]>;
-  getCataloguesByCategory(categoryId: string): Promise<Catalogue[]>;
+  getCataloguesByCategory(categorySlug: string): Promise<Catalogue[]>;
   getProductBySlug(slug: string): Promise<Product | undefined>;
   getRelatedProducts(product: Product, limit?: number): Promise<Product[]>;
   getProducts(query: CatalogQuery): Promise<CatalogResult>;

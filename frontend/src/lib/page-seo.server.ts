@@ -7,6 +7,7 @@ const PAGE_PATHS = {
   shop: '/shop',
   solutions: '/solutions',
   catalogues: '/catalogues',
+  news: '/news',
   about: '/about',
   contacts: '/contacts',
   private_policy: '/private-policy',
@@ -28,6 +29,10 @@ export async function getStaticPageMetadata(pageKey: PageKey): Promise<Metadata>
     throw error;
   }
 
+  // Keep the existing archive image when the News SEO record has no upload.
+  // This is an image-only default; title and description always come from the API.
+  const ogImageUrl = seo.ogImageUrl ?? (pageKey === 'news' ? '/images/news/6.png' : null);
+
   return {
     title: seo.title,
     description: seo.description,
@@ -37,13 +42,19 @@ export async function getStaticPageMetadata(pageKey: PageKey): Promise<Metadata>
       url: canonical,
       title: seo.title,
       description: seo.description,
-      ...(seo.ogImageUrl ? { images: [{ url: seo.ogImageUrl }] } : {}),
+      ...(pageKey === 'news' ? { siteName: 'Pots & Planters', locale: 'en_GB' } : {}),
+      ...(ogImageUrl ? {
+        images: [{
+          url: ogImageUrl,
+          ...(pageKey === 'news' ? { alt: 'Greenery and a ribbed planter with Jumeirah Marsa Al Arab lettering' } : {}),
+        }],
+      } : {}),
     },
     twitter: {
-      card: seo.ogImageUrl ? 'summary_large_image' : 'summary',
+      card: ogImageUrl ? 'summary_large_image' : 'summary',
       title: seo.title,
       description: seo.description,
-      ...(seo.ogImageUrl ? { images: [seo.ogImageUrl] } : {}),
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
   };
 }

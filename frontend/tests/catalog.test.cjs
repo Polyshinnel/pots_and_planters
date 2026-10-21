@@ -9,6 +9,10 @@ const resolve = Module._resolveFilename;
 Module._resolveFilename = function (id, ...args) {
   return resolve.call(this, id.startsWith('@/') ? path.join(__dirname, '../src', id.slice(2)) : id, ...args);
 };
+const load = Module._load;
+Module._load = function (id, ...args) {
+  return id === 'server-only' ? {} : load.call(this, id, ...args);
+};
 require.extensions['.ts'] = (module, filename) => module._compile(ts.transpileModule(fs.readFileSync(filename, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText, filename);
 const domain = require('../src/lib/catalog/domain.ts');
 const { products, categories } = require('../src/data/catalog.mock.ts');
@@ -96,14 +100,30 @@ test('catalogues exclude drafts, support multiple categories and require explici
   for (const categoryId of ['unknown', '']) assert.deepEqual(selectCatalogues([draft, shared], categoryId), []);
   assert.deepEqual(selectCatalogues([]), []);
 });
-test('catalogue repository returns published relationships independently of product results', async () => {
-  assert.equal((await catalogRepository.getCatalogues()).length, 6);
-  assert.equal((await catalogRepository.getCataloguesByCategory('outdoor'))[0].id, 'royal');
-  assert.deepEqual(await catalogRepository.getCataloguesByCategory('unknown'), []);
-  assert.deepEqual(await catalogRepository.getCataloguesByCategory('unknown'), []);
+test('catalogue repository uses the Laravel endpoint and sends category slugs without exposing private data', async () => {
+  process.env.API_INTERNAL_URL = 'http://backend/api';
+  const requested = [];
+  const result = [{ id: 'catalogue-1', slug: 'royal-planters', title: 'Royal Planters', description: null,
+    coverImage: null, coverAlt: null, categoryIds: ['outdoor'],
+    categories: [{ id: 'outdoor', name: 'Outdoor Pots', slug: 'outdoor-pots' }] }];
+  global.fetch = async (url, init) => {
+    requested.push([String(url), init]);
+    return { ok: true, json: async () => ({ data: result }) };
+  };
+  const all = await catalogRepository.getCatalogues();
+  assert.deepEqual(requested[0][0], 'http://backend/api/v1/catalogues');
+  assert.deepEqual(all[0], { ...result[0], isPublished: true });
+  const filtered = await catalogRepository.getCataloguesByCategory('outdoor-pots');
+  assert.equal(new URL(requested[1][0]).searchParams.get('category'), 'outdoor-pots');
+  assert.deepEqual(filtered.map((item) => item.id), ['catalogue-1']);
+  assert.equal(JSON.stringify(all).includes('pdf_path'), false);
+  assert.equal(requested[0][1].cache, 'no-store');
+  global.fetch = async () => ({ ok: true, json: async () => ({ data: [] }) });
+  assert.deepEqual(await catalogRepository.getCatalogues(), []);
+  global.fetch = async () => ({ ok: false, status: 503 });
+  await assert.rejects(catalogRepository.getCatalogues(), /API request failed: 503/);
   const empty = await catalogRepository.getProducts(query({ categoryId: 'outdoor', filters: { color: ['bronze'], material: ['polystone'], size: ['small'] } }));
   assert.equal(empty.total, 0);
-  assert.ok((await catalogRepository.getCataloguesByCategory('outdoor')).length > 0);
 });
 test('catalogue navigation uses category slugs and safely encodes query values', () => {
   assert.equal(cataloguesPath(), '/catalogues');

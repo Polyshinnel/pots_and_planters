@@ -1,5 +1,9 @@
 import 'server-only';
 
+export class ServerApiError extends Error {
+  constructor(public readonly status: number) { super(`API request failed: ${status}`); }
+}
+
 /** Runtime-only Docker URL. Import exclusively from server components/actions. */
 export async function serverApiFetch<T>(path: string, init?: RequestInit): Promise<T> {
   if (!path.startsWith('/') || path.startsWith('//')) {
@@ -12,6 +16,6 @@ export async function serverApiFetch<T>(path: string, init?: RequestInit): Promi
     cache: 'no-store',
     headers: { Accept: 'application/json', ...init?.headers },
   });
-  if (!response.ok) throw new Error(`API request failed: ${response.status}`);
+  if (!response.ok) throw new ServerApiError(response.status);
   return response.json() as Promise<T>;
 }

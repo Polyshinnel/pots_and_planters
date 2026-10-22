@@ -1,6 +1,6 @@
 # Pots & Planters 2.0 — Roadmap
 
-**Срез на 22 октября 2026 года.** Статусы BE-04 обновлены по фактическим изменениям и выполненным проверкам; статусы остальных модулей сохранены согласно предыдущему handoff.
+**Срез на 22 октября 2026 года.** BE-05 обновлён по фактическим изменениям и проверкам BE-05.5; BE-05 остаётся на финальной приёмке.
 
 ## Легенда
 
@@ -8,6 +8,7 @@
 - 🔎 Требует проверки в репозитории
 - ▶️ Следующий модуль
 - ⬜ Запланировано
+- 🟡 Реализовано; приёмка не завершена
 
 ## Этапы
 
@@ -19,7 +20,7 @@
 | BE-02 | SEO статических страниц | ✅ | Проверен по репозиторию; Filament → API → Next.js SSR подтверждены. SEO индексной страницы `/news` включено в BE-02 и проверено вручную по HTML. Laravel tests и frontend typecheck пройдены. |
 | BE-03 | Категории | ✅ | Проверены Filament CRUD, API и Next.js; изменения названия, title, description, H1 и других текстовых полей отображаются на публичных страницах, включая Solutions. Категории для Solutions читаются из API; tile description редактируется в Filament. Laravel tests и frontend typecheck пройдены. |
 | BE-04 | PDF Catalogues Management | ✅ | Filament/API и Next.js интеграция завершены. Каталог DTO не раскрывает приватные PDF данные; category slug фильтр поддерживает many-to-many. Frontend typecheck, catalog 12/12, product 9/9, enquiry 8/8, forms 4/4, SSR smoke и production build (`NODE_ENV=production`) пройдены. `git diff --check` чистый. Ограничения: lint script отсутствует; интерактивный modal не проходил browser smoke. Заявки и gated download — BE-07. |
-| BE-05 | News | ⬜ | Семь исторических публикаций, редактор блоков и live preview |
+| BE-05 | News | ✅ | Завершён. Вертикальная реализация: MariaDB, Laravel, Filament RichEditor/live preview, API и Next.js без mock fallback. Полный backend suite 50/50 (371 assertions), News-focused 11/11 (188), Pint, frontend typecheck/regression tests и production build пройдены. Importer dry-run: 7 записей, 3 категории; семь изображений совпадают с fixture по SHA-256. API/SSR smoke: Page SEO API и canonical архива, SSR 7/7 с canonical/NewsArticle JSON-LD, неизвестный slug 404; новая тестовая публикация отобразилась после build без пересборки. Владелец проекта вручную подтвердил импорт, создание статьи и работу Filament. Production migration/import/deploy не выполнялись. BE-06 — следующий этап только после отдельного подтверждения владельца. |
 | BE-06 | Контакты и шоурумы | ⬜ | Единый источник данных для Header, Footer и Contacts |
 | BE-07 | Заявки и Telegram | ⬜ | Надёжное сохранение, Horizon, четыре типа заявок, gated PDF download |
 | BE-08 | Товары | ⬜ | Исследовать OpenCart SQL до проектирования вариантов и SKU |
@@ -33,7 +34,9 @@
 - [x] Сохранить `/catalogues?category=<slug>`; frontend запрашивает опубликованные каталоги через `serverApiFetch` с `no-store` и не подменяет ошибку mock-данными.
 - [x] Удалить runtime mock-зависимости каталожного модуля; fixture оставлен только для тестов форм/каталога.
 - [x] Проверить frontend: typecheck; catalog 12/12, product 9/9, enquiry 8/8, forms 4/4; SSR для home, списка, трёх category slug и unknown slug; canonical и отсутствие внутренних/private URL; production build с `NODE_ENV=production`; `git diff --check`.
-- [ ] Перед BE-05 согласовать отдельное ТЗ; модуль не начат.
+- [x] Согласовано и выполнено ТЗ BE-05.1–BE-05.4; реализация проверена в рамках BE-05.5.
+- [x] Выполнить BE-05.5: News backend/frontend checks, Pint, production build, importer dry-run и read-only API/SSR smoke для архива, семи slug и unknown slug.
+- [x] Завершить BE-05 после приёмки владельцем; BE-06 остаётся следующим этапом и требует отдельного подтверждения.
 
 ## Критерии готовности каждого модуля
 
@@ -49,6 +52,7 @@
 
 1. **BE-04 → BE-07:** PDF-каталоги создаются раньше механизма заявок; контролируемое скачивание реализуется только после надёжного сохранения заявки.
 2. **BE-05:** нельзя выдумывать новости, даты или изображения; новые slug должны работать без пересборки Next.js.
+   Реализация: семизаписный fixture импортёра, sanitizer, Filament resources/live preview, API и Next.js dynamic rendering находятся в репозитории. Автоматизированные проверки, read-only SSR smoke 7/7, новая опубликованная тестовая запись после build и ручная проверка владельца (импорт, новая статья, Filament) подтверждены. Production операции не выполнялись.
 3. **BE-07:** Telegram не должен быть единственной точкой сохранения заявки; MariaDB первична, отправка через Horizon с retry и idempotency.
 4. **BE-08:** структура товаров, SKU и вариантов зависит от исследования реального OpenCart SQL export; неизвестные цены показывать как `on_enquiry`.
 5. **BE-09:** сохранить старые SEO URL, включая `?product_id=...`, с проверенным соответствием и 301 redirects.

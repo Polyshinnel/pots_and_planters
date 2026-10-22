@@ -7,6 +7,7 @@ import { NewsContact } from '@/components/news/NewsContact';
 import pageStyles from '@/components/catalog/Catalog.module.css';
 import styles from '@/components/news/News.module.css';
 
+export const dynamic = 'force-dynamic';
 export const generateMetadata = () => getStaticPageMetadata('news');
 
 export default async function NewsPage() {
@@ -16,11 +17,13 @@ export default async function NewsPage() {
       <li><Link href="/">Main</Link></li><li><span aria-current="page">News</span></li>
     </ol></nav>
     <header className={styles.hero}>
-      <p className={styles.eyebrow}>FROM THE POTS &amp; PLANTERS ARCHIVE</p>
+      <p className={styles.eyebrow}>FROM THE POTS &amp; PLANTERS LIFE</p>
       <h1>News &amp; Insights</h1>
-      <p>Project announcements, company milestones and exhibitions from 2023–2025. Explore stories of planters and greenery in hospitality, design and commercial spaces.</p>
+      <p>Project announcements, company milestones and exhibitions. Explore stories of planters and greenery in hospitality, design and commercial spaces.</p>
     </header>
-    <div className={styles.grid}>{articles.map((article, index) => <NewsCard key={article.id} article={article} priority={index === 0} />)}</div>
+    {articles.length > 0
+      ? <div className={styles.grid}>{articles.map((article, index) => <NewsCard key={article.id} article={article} priority={index === 0} />)}</div>
+      : <p className={styles.empty}>There are no news articles to display yet.</p>}
     <NewsContact />
   </Container>;
 }

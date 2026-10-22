@@ -12,7 +12,7 @@ export function newsMetadata(article?: NewsArticle): Metadata {
       type: article ? 'article' : 'website', title, description, url: path,
       siteName: 'Pots & Planters', locale: 'en_GB',
       images: [{ url: image, alt: article?.coverAlt ?? 'Greenery and a ribbed planter with Jumeirah Marsa Al Arab lettering' }],
-      ...(article ? { publishedTime: article.publishedAt, section: article.category } : {}),
+      ...(article ? { publishedTime: article.publishedAt, section: article.category.name } : {}),
     },
     twitter: { card: 'summary_large_image', title, description, images: [image] },
   };

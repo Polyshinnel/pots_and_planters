@@ -1,7 +1,6 @@
-import type { NewsArticle } from '@/types/news';
-
 // Canonical copy: docs/frontend/FE-11-news.md. Images copied unchanged from the supplied news directory.
-export const newsArticles: NewsArticle[] = [
+// Retained as a historical fixture only; public routes use the Laravel API.
+export const newsArticles = [
   {
     "id": "news-1",
     "slug": "supplier-private-office-sheikh-omar-bin-zayed-al-nahyan",

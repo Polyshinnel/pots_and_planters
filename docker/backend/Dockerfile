@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
 FROM php:8.4-fpm-bookworm AS php-base
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libicu-dev libzip-dev libonig-dev libfcgi-bin unzip \
-    && docker-php-ext-install -j$(nproc) bcmath intl mbstring pdo_mysql pcntl zip opcache \
+    libicu-dev libzip-dev libonig-dev libxml2-dev libfcgi-bin unzip \
+    && docker-php-ext-install -j$(nproc) bcmath dom intl mbstring pdo_mysql pcntl zip opcache \
     && pecl install redis-6.3.0 && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /var/www/html

@@ -8,11 +8,11 @@ export function NewsCard({ article, priority = false }: { article: NewsArticle; 
   return <article className={styles.card}>
     <Link className={styles.cardLink} href={`/news/${article.slug}`} aria-labelledby={`title-${article.id}`}>
       <div className={styles.cardImage}>
-        <Image src={article.coverImage} alt={article.coverAlt} fill preload={priority}
+        <Image src={article.coverImage} alt={article.coverAlt} fill preload={priority} unoptimized={article.coverImage.includes('/storage/')}
           sizes="(max-width: 575px) calc(100vw - 32px), (max-width: 991px) 46vw, (max-width: 1420px) 30vw, 440px" />
       </div>
       <div className={styles.cardCopy}>
-        <div className={styles.meta}><span>{article.category}</span><time dateTime={article.publishedAt}>{formatNewsDate(article.publishedAt)}</time></div>
+        <div className={styles.meta}><span>{article.category.name}</span><time dateTime={article.publishedAt}>{formatNewsDate(article.publishedAt)}</time></div>
         <h2 id={`title-${article.id}`}>{article.title}</h2>
         <p>{article.excerpt}</p>
         <span className={styles.readMore}>Read article <span aria-hidden="true">↗</span></span>

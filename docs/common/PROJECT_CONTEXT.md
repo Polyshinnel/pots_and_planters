@@ -24,7 +24,8 @@ Pots & Planters 2.0 — премиальный B2B-сайт кашпо, деко
 - BE-02 — SEO статических страниц, по истории проекта завершён.
 - BE-03 — категории, по истории проекта завершён.
 - BE-04 — PDF Catalogues Management — завершён: Filament/API по фактическим изменениям репозитория, Next.js SSR-интеграция и проверки frontend выполнены.
-- BE-05 — News: завершён. Laravel suite — 50 тестов / 371 assertions, News-focused — 11 / 188; Pint, frontend typecheck и regression tests пройдены. Next.js production build прошёл с `NODE_ENV=production`. Dry-run подтвердил 7 записей, 3 категории и совпадающие SHA-256 изображений. Read-only Compose smoke подтвердил News Page SEO API и canonical архива, API/SSR для семи исторических slug, canonical/NewsArticle JSON-LD и 404. Временная запись в `potsandplanters_test` отобразилась в уже собранном Next.js без rebuild; статья и категория удалены. Владелец проекта вручную подтвердил успешный импорт исторических новостей, создание новой статьи и работу интерфейса Filament. Production migration/import/deploy не выполнялись. BE-06 не начинать без отдельного подтверждения владельца.
+- BE-05 — News: завершён. Laravel suite — 50 тестов / 371 assertions, News-focused — 11 / 188; Pint, frontend typecheck и regression tests пройдены. Next.js production build прошёл с `NODE_ENV=production`. Dry-run подтвердил 7 записей, 3 категории и совпадающие SHA-256 изображений. Read-only Compose smoke подтвердил News Page SEO API и canonical архива, API/SSR для семи исторических slug, canonical/NewsArticle JSON-LD и 404. Временная запись в `potsandplanters_test` отобразилась в уже собранном Next.js без rebuild; статья и категория удалены. Владелец проекта вручную подтвердил успешный импорт исторических новостей, создание новой статьи и работу интерфейса Filament. Production migration/import/deploy не выполнялись.
+- BE-06 — Contacts & Showrooms: завершён и принят владельцем. Управляемые в Filament шоурумы и singleton-настройки выдаются через `GET /api/v1/contacts`; Next.js использует единый API без runtime mock fallback. Проверены пустой ответ, 503, опубликованность/primary и появление временного изменения тестовой БД в SSR без rebuild. Laravel suite — 57 тестов / 427 assertions; frontend typecheck и suites contacts 3/3, catalog 12/12, product 9/9, enquiry 8/8, forms 4/4; production build и Pint затронутых PHP-файлов прошли. Общий Pint выявил 11 ранее существующих style issues вне BE-06. Browser-level Filament smoke не выполнялся; владелец подтвердил полную приёмку. Production migration/import/deploy не выполнялись.
 
 BE-02/03 считаются завершёнными согласно предыдущей проверке репозитория.
 
@@ -32,8 +33,8 @@ BE-02/03 считаются завершёнными согласно преды
 
 1. BE-04 — PDF-каталоги.
 2. BE-05 — News.
-3. BE-06 — контакты и шоурумы.
-4. BE-07 — заявки и Telegram.
+3. BE-06 — контакты и шоурумы (завершён и принят).
+4. BE-07 — заявки и Telegram (следующий модуль).
 5. BE-08 — товары.
 6. BE-09 — финальная интеграция и миграция OpenCart.
 
@@ -77,7 +78,7 @@ Google Search Preview, созданный в BE-02, должен повторн�
 
 ## Контакты
 
-Три шоурума: DEVA HARMONY TRADING (Al Quoz, Dubai), Real Touch Flowers (Jebel Ali, Dubai), Design House Projects (Riyadh). Контакты в Header/Footer и на странице Contacts должны использовать согласованный единый источник.
+Три шоурума: DEVA HARMONY TRADING (Al Quoz, Dubai), Real Touch Flowers (Jebel Ali, Dubai), Design House Projects (Riyadh). Контакты в Header/Footer, Home, Product, Cart/Enquiry, Catalogues, About и на странице Contacts используют согласованный Laravel API `GET /api/v1/contacts` с envelope `{ data: { primary, whatsappUrl, showrooms } }`. DEVA — primary; наружу выдаются только опубликованные шоурумы в стабильном порядке. Пустая база возвращает `primary: null`, `whatsappUrl: null`, `showrooms: []`; ошибка API не подменяется фиктивными контактами. Next.js делает runtime-запросы с `no-store`, изменения отображаются без rebuild. Тесты Contacts и SSR, включая переключение primary, снятие публикации primary, пустой ответ и 503, пройдены. При BE-06.4 исправлена серверная валидация частичного Instagram-контакта. Владелец подтвердил полное закрытие BE-06. Production operations не выполнялись; browser-level Filament smoke не проводился.
 
 ## Заявки
 

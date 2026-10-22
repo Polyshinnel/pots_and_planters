@@ -4,6 +4,7 @@ import { Container } from '@mantine/core';
 import { catalogRepository } from '@/lib/catalog/repository';
 import { getCategories } from '@/lib/catalog/categories.server';
 import { getProjectContact } from '@/lib/project-contact';
+import { getContactsResult } from '@/lib/contacts.server';
 import { CataloguesListing } from '@/components/catalogues/CataloguesListing';
 import pageStyles from '@/components/catalog/Catalog.module.css';
 import styles from '@/components/catalogues/Catalogues.module.css';
@@ -16,11 +17,12 @@ type SearchParams = Promise<{ category?: string | string[] }>;
 export default async function Catalogues({ searchParams }: { searchParams: SearchParams }) {
   const query = await searchParams;
   const categorySlug = Array.isArray(query.category) ? query.category[0] : query.category;
-  const [catalogues, categories] = await Promise.all([
+  const [catalogues, categories, contactResult] = await Promise.all([
     categorySlug ? catalogRepository.getCataloguesByCategory(categorySlug) : catalogRepository.getCatalogues(),
     getCategories(),
+    getContactsResult(),
   ]);
-  const contact = getProjectContact('Hello Pots & Planters, I would like help selecting products from your catalogues for a project in the UAE.');
+  const contact = getProjectContact('Hello Pots & Planters, I would like help selecting products from your catalogues for a project in the UAE.', contactResult.status === 'success' ? contactResult.data.whatsappUrl : null);
   return <Container className={pageStyles.page}>
     <nav aria-label="Breadcrumb" className={pageStyles.breadcrumb}><ol>
       <li><Link href="/">Main</Link></li><li><span aria-current="page">Catalogues</span></li>

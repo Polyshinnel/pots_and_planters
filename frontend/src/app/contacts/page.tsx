@@ -1,7 +1,7 @@
 import { getStaticPageMetadata } from '@/lib/page-seo.server';
 import Link from 'next/link';
 import { Container } from '@mantine/core';
-import { contactsData } from '@/data/contacts.mock';
+import { getContactsResult } from '@/lib/contacts.server';
 import { getProjectContact } from '@/lib/project-contact';
 import { ContactLinks } from '@/components/contacts/ContactLinks';
 import { ContactEnquiryButton } from '@/components/contacts/ContactEnquiryButton';
@@ -13,8 +13,10 @@ import styles from '@/components/contacts/Contacts.module.css';
 export const generateMetadata = () => getStaticPageMetadata('contacts');
 export const dynamic = 'force-dynamic';
 
-export default function ContactsPage() {
-  const contact = getProjectContact('Hello Pots & Planters, I would like to discuss planters and artificial greenery for my project.');
+export default async function ContactsPage() {
+  const result = await getContactsResult();
+  const contacts = result.status === 'success' ? result.data : null;
+  const contact = getProjectContact('Hello Pots & Planters, I would like to discuss planters and artificial greenery for my project.', contacts?.whatsappUrl ?? null);
   return <Container className={`${pageStyles.page} ${styles.page}`}>
     <nav aria-label="Breadcrumb" className={pageStyles.breadcrumb}><ol>
       <li><Link href="/">Main</Link></li><li><span aria-current="page">Contacts</span></li>
@@ -26,11 +28,13 @@ export default function ContactsPage() {
     </header>
     <section className={styles.direct} aria-labelledby="direct-contact-title">
       <div><h2 id="direct-contact-title">Get in Touch</h2><p>Call or email our main Dubai showroom to discuss your project.</p></div>
-      <div><ContactLinks details={contactsData.primary} />
-        {contact.isWhatsApp && <a className={styles.action} href={contact.href} target="_blank" rel="noopener noreferrer">Discuss on WhatsApp (opens in a new tab)</a>}
+      <div>{contacts ? <>{contacts.primary ? <ContactLinks details={contacts.primary} /> : <p>No primary showroom contact is currently published.</p>}</> : <p role="alert">Contact details are temporarily unavailable. Please try again later.</p>}
+        {contact.isWhatsApp
+          ? <a className={styles.action} href={contact.href} target="_blank" rel="noopener noreferrer">Discuss on WhatsApp</a>
+          : <a className={styles.action} href={contact.href}>Discuss Your Project</a>}
       </div>
     </section>
-    <Showrooms showrooms={contactsData.showrooms} />
+    {contacts ? contacts.showrooms.length ? <Showrooms showrooms={contacts.showrooms} /> : <p>No showrooms are currently published.</p> : null}
     <section id="project-enquiry" className={styles.enquiry} aria-labelledby="project-enquiry-title" tabIndex={-1}>
       <div><h2 id="project-enquiry-title">Tell Us About Your Project</h2>
         <p>For architects, interior and landscape designers, contractors, hospitality teams and project buyers.</p>

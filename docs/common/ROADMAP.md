@@ -1,6 +1,6 @@
 # Pots & Planters 2.0 — Roadmap
 
-**Срез на 22 октября 2026 года.** BE-05 обновлён по фактическим изменениям и проверкам BE-05.5; BE-05 остаётся на финальной приёмке.
+**Срез на 22 октября 2026 года.** BE-05 и BE-06 завершены и приняты владельцем; следующий модуль — BE-07.
 
 ## Легенда
 
@@ -20,9 +20,9 @@
 | BE-02 | SEO статических страниц | ✅ | Проверен по репозиторию; Filament → API → Next.js SSR подтверждены. SEO индексной страницы `/news` включено в BE-02 и проверено вручную по HTML. Laravel tests и frontend typecheck пройдены. |
 | BE-03 | Категории | ✅ | Проверены Filament CRUD, API и Next.js; изменения названия, title, description, H1 и других текстовых полей отображаются на публичных страницах, включая Solutions. Категории для Solutions читаются из API; tile description редактируется в Filament. Laravel tests и frontend typecheck пройдены. |
 | BE-04 | PDF Catalogues Management | ✅ | Filament/API и Next.js интеграция завершены. Каталог DTO не раскрывает приватные PDF данные; category slug фильтр поддерживает many-to-many. Frontend typecheck, catalog 12/12, product 9/9, enquiry 8/8, forms 4/4, SSR smoke и production build (`NODE_ENV=production`) пройдены. `git diff --check` чистый. Ограничения: lint script отсутствует; интерактивный modal не проходил browser smoke. Заявки и gated download — BE-07. |
-| BE-05 | News | ✅ | Завершён. Вертикальная реализация: MariaDB, Laravel, Filament RichEditor/live preview, API и Next.js без mock fallback. Полный backend suite 50/50 (371 assertions), News-focused 11/11 (188), Pint, frontend typecheck/regression tests и production build пройдены. Importer dry-run: 7 записей, 3 категории; семь изображений совпадают с fixture по SHA-256. API/SSR smoke: Page SEO API и canonical архива, SSR 7/7 с canonical/NewsArticle JSON-LD, неизвестный slug 404; новая тестовая публикация отобразилась после build без пересборки. Владелец проекта вручную подтвердил импорт, создание статьи и работу Filament. Production migration/import/deploy не выполнялись. BE-06 — следующий этап только после отдельного подтверждения владельца. |
-| BE-06 | Контакты и шоурумы | ⬜ | Единый источник данных для Header, Footer и Contacts |
-| BE-07 | Заявки и Telegram | ⬜ | Надёжное сохранение, Horizon, четыре типа заявок, gated PDF download |
+| BE-05 | News | ✅ | Завершён. Вертикальная реализация: MariaDB, Laravel, Filament RichEditor/live preview, API и Next.js без mock fallback. Полный backend suite 50/50 (371 assertions), News-focused 11/11 (188), Pint, frontend typecheck/regression tests и production build пройдены. Importer dry-run: 7 записей, 3 категории; семь изображений совпадают с fixture по SHA-256. API/SSR smoke: Page SEO API и canonical архива, SSR 7/7 с canonical/NewsArticle JSON-LD, неизвестный slug 404; новая тестовая публикация отобразилась после build без пересборки. Владелец проекта вручную подтвердил импорт, создание статьи и работу Filament. Production migration/import/deploy не выполнялись. |
+| BE-06 | Контакты и шоурумы | ✅ | Завершён и принят владельцем. Filament CRUD и singleton settings → `GET /api/v1/contacts` → Next.js SSR; единый источник для Footer, Home, Contacts, About, Catalogues, Product и Cart/Enquiry, без runtime mock fallback. Backend suite 57/57 (427 assertions), frontend typecheck, contacts 3/3, catalog 12/12, product 9/9, enquiry 8/8, forms 4/4, production build и Pint для затронутых PHP-файлов прошли. Проверены точные три шоурума и primary DEVA, пустой ответ, 503, переключение primary и снятие публикации. Контактное изменение в тестовой БД появилось в SSR после build без пересборки. Общий Pint выявил 11 style issues вне BE-06; browser-level Filament smoke не выполнялся. Владелец подтвердил полное закрытие. Тестовая БД очищена; production operations не выполнялись. |
+| BE-07 | Заявки и Telegram | ▶️ | Следующий модуль: надёжное сохранение, Horizon, четыре типа заявок, gated PDF download |
 | BE-08 | Товары | ⬜ | Исследовать OpenCart SQL до проектирования вариантов и SKU |
 | BE-09 | Финальная интеграция и миграция OpenCart | ⬜ | Импорт, URL mapping, 301, SEO, проверка перед запуском; Solutions после появления товаров |
 
@@ -36,7 +36,10 @@
 - [x] Проверить frontend: typecheck; catalog 12/12, product 9/9, enquiry 8/8, forms 4/4; SSR для home, списка, трёх category slug и unknown slug; canonical и отсутствие внутренних/private URL; production build с `NODE_ENV=production`; `git diff --check`.
 - [x] Согласовано и выполнено ТЗ BE-05.1–BE-05.4; реализация проверена в рамках BE-05.5.
 - [x] Выполнить BE-05.5: News backend/frontend checks, Pint, production build, importer dry-run и read-only API/SSR smoke для архива, семи slug и unknown slug.
-- [x] Завершить BE-05 после приёмки владельцем; BE-06 остаётся следующим этапом и требует отдельного подтверждения.
+- [x] Завершить BE-05 после приёмки владельцем.
+- [x] Выполнить BE-06.1–BE-06.4: read-only audit, backend/Filament/API, Next.js интеграция, автоматические проверки и SSR success/empty/503 сценарии.
+- [x] Подтвердить изменения данных и primary в SSR без rebuild; исправить частичную Instagram-валидацию.
+- [x] Завершить BE-06 после полной приёмки владельцем; BE-07 — следующий модуль.
 
 ## Критерии готовности каждого модуля
 

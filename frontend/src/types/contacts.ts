@@ -6,13 +6,13 @@ export interface ContactPhone {
 export interface ContactDetails {
   phones?: readonly ContactPhone[];
   emails?: readonly string[];
-  instagram?: { handle: string; url: string };
+  instagram?: { handle: string; url: string } | null;
 }
 
 export interface Showroom extends ContactDetails {
   id: string;
   name: string;
-  description?: string;
+  description?: string | null;
   address: string;
   city?: string;
   country?: string;
@@ -23,7 +23,13 @@ export interface Showroom extends ContactDetails {
 
 /** Serializable frontend contract for future Laravel-managed contact content. */
 export interface ContactsData {
-  primary: ContactDetails;
+  primary: Showroom | null;
   showrooms: readonly Showroom[];
-  whatsappUrl: `https://wa.me/${string}` | null;
+  whatsappUrl: string | null;
 }
+
+export interface ContactsApiResponse { data: ContactsData }
+
+export type ContactsResult =
+  | { status: 'success'; data: ContactsData }
+  | { status: 'error' };

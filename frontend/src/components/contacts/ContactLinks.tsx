@@ -1,7 +1,8 @@
 import type { ContactDetails } from '@/types/contacts';
 import styles from './Contacts.module.css';
 
-export function ContactLinks({ details }: { details: ContactDetails }) {
+export function ContactLinks({ details }: { details: ContactDetails | null }) {
+  if (!details) return null;
   return <div className={styles.contactLinks}>
     {details.phones?.map((phone) => <a key={phone.href} href={phone.href} aria-label={`Call ${phone.label}`}>{phone.label}</a>)}
     {details.emails?.map((email) => <a key={email} href={`mailto:${email}`} aria-label={`Email ${email}`}>{email}</a>)}

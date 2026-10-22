@@ -13,7 +13,8 @@
     "test:catalog": "node tests/catalog.test.cjs",
     "test:product": "node tests/product-detail.test.cjs",
     "test:enquiry": "node tests/enquiry.test.cjs",
-    "test:forms": "node tests/forms.test.cjs"
+    "test:forms": "node tests/forms.test.cjs",
+    "test:contacts": "node tests/contacts.test.cjs"
   },
   "dependencies": {
     "@fancyapps/ui": "^6.1.15",

@@ -2,8 +2,9 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button, Textarea, TextInput } from '@mantine/core';
+import Link from 'next/link';
 import { IconBrandWhatsapp } from '@tabler/icons-react';
-import { siteConfig } from '@/config/site';
+import { useWhatsAppUrl } from '@/components/layout/ContactsProvider';
 import { useEnquiry } from '@/lib/enquiry/store';
 import { enquiryWhatsAppUrl } from '@/lib/enquiry/whatsapp';
 import { buildEnquiryPayload, validateEnquiryForm, type EnquiryContactForm, type EnquiryFormErrors, type EnquirySubmissionPayload } from '@/lib/enquiry/submission';
@@ -12,8 +13,9 @@ import styles from './Enquiry.module.css';
 
 const development = process.env.NODE_ENV === 'development';
 export function EnquiryCheckout() {
+  const whatsappBaseUrl = useWhatsAppUrl();
   const { items, totalQuantity, hydrated } = useEnquiry();
-  const whatsappUrl = enquiryWhatsAppUrl(siteConfig.whatsappUrl, "Hello! I'd like to discuss planters for my project.");
+  const whatsappUrl = enquiryWhatsAppUrl(whatsappBaseUrl, "Hello! I'd like to discuss planters for my project.");
   const [form, setForm] = useState<EnquiryContactForm>({ name: '', phone: '', email: '', company: '', comments: '' });
   const [errors, setErrors] = useState<EnquiryFormErrors>({});
   const [payload, setPayload] = useState<EnquirySubmissionPayload | null>(null);
@@ -44,7 +46,9 @@ export function EnquiryCheckout() {
       <aside className={styles.consultation} aria-labelledby="project-help">
         <h3 id="project-help">Need help with your project?</h3>
         <p>Not sure about sizes, finishes or quantities? Our team can help you select planters for your space, discuss alternatives and prepare a quotation for your requirements.</p>
-        {whatsappUrl && <Button component="a" href={whatsappUrl} target="_blank" rel="noreferrer" leftSection={<IconBrandWhatsapp size={18} />} variant="light" color="olive" fullWidth styles={{ label: { whiteSpace: 'normal' }, root: { height: 'auto', minHeight: 46 } }}>Discuss your project on WhatsApp</Button>}
+        {whatsappUrl
+          ? <Button component="a" href={whatsappUrl} target="_blank" rel="noreferrer" leftSection={<IconBrandWhatsapp size={18} />} variant="light" color="olive" fullWidth styles={{ label: { whiteSpace: 'normal' }, root: { height: 'auto', minHeight: 46 } }}>Discuss your project on WhatsApp</Button>
+          : <Button component={Link} href="/contacts#project-enquiry" variant="light" color="olive" fullWidth styles={{ label: { whiteSpace: 'normal' }, root: { height: 'auto', minHeight: 46 } }}>Discuss your project</Button>}
       </aside>
     </section>
     <form ref={formElement} className={styles.form} onSubmit={submit} noValidate aria-labelledby="enquiry-contact">

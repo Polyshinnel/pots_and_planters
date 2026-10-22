@@ -3,10 +3,11 @@
 import { IconBook2, IconBrandWhatsapp } from '@tabler/icons-react';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { siteConfig } from '@/config/site';
+import { useWhatsAppUrl } from './ContactsProvider';
 import styles from './Layout.module.css';
 
 export function FloatingActions({ hidden, home = false, hideOnMobile = false }: { hidden: boolean; home?: boolean; hideOnMobile?: boolean }) {
+  const whatsappUrl = useWhatsAppUrl();
   const [pastViewport, setPastViewport] = useState(false);
   useEffect(() => {
     if (!home) return;
@@ -31,16 +32,12 @@ export function FloatingActions({ hidden, home = false, hideOnMobile = false }: 
   }, [home]);
   const isHidden = hidden || (home && !pastViewport);
   return <aside aria-label="Quick actions" className={`${styles.floating} ${isHidden ? styles.floatingHidden : ''} ${hideOnMobile ? styles.floatingMobileHidden : ''}`} aria-hidden={isHidden} inert={isHidden}>
-    <div className={styles.floatingItem}>
-      {siteConfig.whatsappUrl
-        ? <a className={styles.floatingButton} href={siteConfig.whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp (opens in a new tab)">
+    {whatsappUrl && <div className={styles.floatingItem}>
+        <a className={styles.floatingButton} href={whatsappUrl} target="_blank" rel="noopener noreferrer" aria-label="WhatsApp (opens in a new tab)">
             <IconBrandWhatsapp size={26} stroke={1.5} aria-hidden="true" />
           </a>
-        : <button type="button" className={styles.floatingButton} disabled aria-label="WhatsApp unavailable">
-            <IconBrandWhatsapp size={26} stroke={1.5} aria-hidden="true" />
-          </button>}
-      <span className={styles.floatingLabel}>WhatsApp</span>
-    </div>
+        <span className={styles.floatingLabel}>WhatsApp</span>
+    </div>}
     <div className={styles.floatingItem}>
       <Link className={styles.floatingButton} href="/catalogues" aria-label="Catalogues">
         <IconBook2 size={26} stroke={1.5} aria-hidden="true" />

@@ -9,8 +9,10 @@ import { FloatingActions } from './FloatingActions';
 import styles from './Layout.module.css';
 import { ENQUIRY_PATH } from '@/lib/enquiry/domain';
 import { CookieNotice } from './CookieNotice';
+import { ContactsProvider } from './ContactsProvider';
+import type { ContactsResult } from '@/types/contacts';
 
-export function SiteShell({ children, footer }: { children: React.ReactNode; footer: React.ReactNode }) {
+export function SiteShell({ children, footer, contacts }: { children: React.ReactNode; footer: React.ReactNode; contacts: ContactsResult }) {
   const theme = useMantineTheme();
   const pathname = usePathname();
   const [menuOpened, setMenuOpened] = useState(false);
@@ -26,5 +28,5 @@ export function SiteShell({ children, footer }: { children: React.ReactNode; foo
     {footer}
     <FloatingActions hidden={menuOpened} hideOnMobile={pathname === ENQUIRY_PATH} />
   </div>;
-  return <>{shell}<CookieNotice /></>;
+  return <ContactsProvider whatsappUrl={contacts.status === 'success' ? contacts.data.whatsappUrl : null}>{shell}<CookieNotice /></ContactsProvider>;
 }

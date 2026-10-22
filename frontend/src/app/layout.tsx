@@ -6,6 +6,7 @@ import { theme } from '@/theme';
 import { SiteShell } from '@/components/layout/SiteShell';
 import { SiteFooter } from '@/components/layout/SiteFooter';
 import { ColorSchemeScript, MantineProvider, mantineHtmlProps } from '@mantine/core';
+import { getContactsResult } from '@/lib/contacts.server';
 
 const lato = localFont({
   src: [
@@ -31,13 +32,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const contacts = await getContactsResult();
   return (
     <html lang="en" {...mantineHtmlProps} className={lato.variable}>
       <head><ColorSchemeScript forceColorScheme="light" /></head>
       <body>
         <MantineProvider forceColorScheme="light" theme={theme}>
-          <SiteShell footer={<SiteFooter />}>{children}</SiteShell>
+          <SiteShell contacts={contacts} footer={<SiteFooter contacts={contacts} />}>{children}</SiteShell>
         </MantineProvider>
       </body>
     </html>

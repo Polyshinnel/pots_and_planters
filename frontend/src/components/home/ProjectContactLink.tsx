@@ -7,9 +7,10 @@ import { getProjectContact } from '@/lib/project-contact';
 import { ContactEnquiryForm } from '@/components/forms/ContactEnquiryForm';
 import { LeadDialog } from '@/components/forms/LeadDialog';
 import styles from './Home.module.css';
+import { useWhatsAppUrl } from '@/components/layout/ContactsProvider';
 
 export function ProjectContactLink({ final = false, hero = false }: { final?: boolean; hero?: boolean }) {
-  const contact = getProjectContact(homeCopy.contact.message);
+  const contact = getProjectContact(homeCopy.contact.message, useWhatsAppUrl());
   const [opened, setOpened] = useState(false);
   if (final && contact.isWhatsApp) {
     return <a className={styles.button} href={contact.href} target="_blank" rel="noopener noreferrer">

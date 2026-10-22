@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@mantine/core';
 import { IconBrandWhatsapp, IconMinus, IconPlus, IconShoppingBag } from '@tabler/icons-react';
-import { siteConfig } from '@/config/site';
+import { useWhatsAppUrl } from '@/components/layout/ContactsProvider';
 import { ENQUIRY_PATH, MAX_ENQUIRY_QUANTITY, validQuantity } from '@/lib/enquiry/domain';
 import { enquiryStore, useEnquiry } from '@/lib/enquiry/store';
 import { productWhatsAppUrl } from '@/lib/enquiry/whatsapp';
@@ -15,6 +15,7 @@ import styles from './Product.module.css';
 
 export function ProductActions({ product }: { product: ProductEnquiryContext & { slug: string; categoryId: string } }) {
   const pathname = usePathname();
+  const whatsappBaseUrl = useWhatsAppUrl();
   const [quoteOpened, setQuoteOpened] = useState(false);
   const { hydrated } = useEnquiry();
   const [quantity, setQuantity] = useState('1');
@@ -24,7 +25,7 @@ export function ProductActions({ product }: { product: ProductEnquiryContext & {
   useEffect(() => { setOrigin(window.location.origin); }, []);
   const value = Number(quantity);
   const valid = quantity.trim() !== '' && validQuantity(value);
-  const whatsappUrl = origin ? productWhatsAppUrl(siteConfig.whatsappUrl, product, valid ? value : 1, origin) : null;
+  const whatsappUrl = origin ? productWhatsAppUrl(whatsappBaseUrl, product, valid ? value : 1, origin) : null;
   function add() {
     if (!valid) return;
     try {
@@ -50,8 +51,10 @@ export function ProductActions({ product }: { product: ProductEnquiryContext & {
     <p className={styles.note}>Add to Enquiry saves your selection in this browser. Request a Quote opens a single-product form. Online submission is not available yet.</p>
     <div role="status" aria-live="polite" aria-atomic="true" className={styles.feedback}>{feedback}</div>
     {added && <Link href={ENQUIRY_PATH}>View enquiry basket →</Link>}
-    {whatsappUrl && <Button component="a" href={whatsappUrl} target="_blank" rel="noopener noreferrer" variant="subtle"
-      aria-disabled={!valid} data-disabled={!valid || undefined} onClick={(event) => { if (!valid) event.preventDefault(); }}
-      leftSection={<IconBrandWhatsapp size={20} aria-hidden="true" />}>Enquire on WhatsApp</Button>}
+    {whatsappUrl
+      ? <Button component="a" href={whatsappUrl} target="_blank" rel="noopener noreferrer" variant="subtle"
+          aria-disabled={!valid} data-disabled={!valid || undefined} onClick={(event) => { if (!valid) event.preventDefault(); }}
+          leftSection={<IconBrandWhatsapp size={20} aria-hidden="true" />}>Enquire on WhatsApp</Button>
+      : <Link href="/contacts#project-enquiry">Discuss Your Project</Link>}
   </div><ProductEnquiryDialog opened={quoteOpened} onClose={() => setQuoteOpened(false)} product={product} quantity={quantity} source={{ pagePath: pathname, placement: 'product-detail' }} /></>;
 }

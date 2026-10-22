@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\CatalogueController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ContactsController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\PageSeoController;
 use Illuminate\Support\Facades\DB;
@@ -26,5 +27,6 @@ Route::get('/v1/page-seo/{pageKey}', [PageSeoController::class, 'show'])
 Route::get('/v1/categories', [CategoryController::class, 'index']);
 Route::get('/v1/categories/{slug}', [CategoryController::class, 'show'])->where('slug', '[a-z0-9-]+');
 Route::get('/v1/catalogues', [CatalogueController::class, 'index']);
+Route::get('/v1/contacts', ContactsController::class);
 Route::get('/v1/news', [NewsController::class, 'index']);
 Route::get('/v1/news/{slug}', [NewsController::class, 'show'])->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');

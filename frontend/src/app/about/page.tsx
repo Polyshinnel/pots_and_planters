@@ -8,7 +8,7 @@ import { getCategories } from '@/lib/catalog/categories.server';
 import { AboutPartners } from '@/components/about/AboutPartners';
 import { AboutContactButton } from '@/components/about/AboutContactButton';
 import { AboutTestimonials } from '@/components/about/AboutTestimonials';
-import { contactsData } from '@/data/contacts.mock';
+import { getContactsResult } from '@/lib/contacts.server';
 import { HomeImage } from '@/components/home/HomeImage';
 import pageStyles from '@/components/catalog/Catalog.module.css';
 import homeStyles from '@/components/home/Home.module.css';
@@ -18,7 +18,8 @@ export const generateMetadata = () => getStaticPageMetadata('about');
 export const dynamic = 'force-dynamic';
 
 export default async function AboutPage() {
-  const categories = await getCategories();
+  const [categories, contactResult] = await Promise.all([getCategories(), getContactsResult()]);
+  const showrooms = contactResult.status === 'success' ? contactResult.data.showrooms : [];
   return <Container className={`${pageStyles.page} ${styles.page}`}>
     <nav aria-label="Breadcrumb" className={pageStyles.breadcrumb}><ol>
       <li><Link href="/">Main</Link></li><li><span aria-current="page">About Us</span></li>
@@ -70,11 +71,11 @@ export default async function AboutPage() {
       <AboutTestimonials />
     </section>
 
-    {!!contactsData.showrooms.length && <section className={styles.section} aria-labelledby="visit-title">
+    {!!showrooms.length && <section className={styles.section} aria-labelledby="visit-title">
       <div className={styles.headingRow}><div className={styles.sectionIntro}>
         <p className={styles.eyebrow}>See the collection</p><h2 id="visit-title">Visit Our Showrooms</h2><p>Find our showroom contacts in Dubai, UAE and Riyadh, Saudi Arabia.</p>
       </div><Link href="/contacts" className={styles.textLink}>View All Contacts <IconArrowUpRight size={20} aria-hidden="true" /></Link></div>
-      <div className={styles.showrooms}>{contactsData.showrooms.map((showroom) => <article key={showroom.id}>
+      <div className={styles.showrooms}>{showrooms.map((showroom) => <article key={showroom.id}>
         <p className={styles.location}><IconMapPin size={18} stroke={1.5} aria-hidden="true" />{[showroom.city, showroom.country].filter(Boolean).join(', ')}</p>
         <h3>{showroom.name}</h3><address>{showroom.address}</address>
       </article>)}</div>

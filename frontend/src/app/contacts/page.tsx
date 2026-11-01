@@ -39,7 +39,6 @@ export default async function ContactsPage() {
       <div><h2 id="project-enquiry-title">Tell Us About Your Project</h2>
         <p>For architects, interior and landscape designers, contractors, hospitality teams and project buyers.</p>
         <p>Share the products, specifications, quantities and project requirements you have in mind so we can explore suitable options.</p>
-        <p className={styles.note}>Online submission is not available yet. This form checks your details without sending them. To contact the team now, please call or email a showroom.</p>
       </div>
       <div className={styles.formPanel}><ContactEnquiryForm source={{ pagePath: '/contacts', placement: 'contacts_page' }} /></div>
     </section>

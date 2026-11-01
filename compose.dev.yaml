@@ -30,6 +30,7 @@ services:
       target: development
     environment:
       NODE_ENV: development
+      NEXT_PUBLIC_ENQUIRIES_ENABLED: 'true'
       WATCHPACK_POLLING: 'true'
     volumes:
       - ./frontend/src:/app/src:ro

@@ -1,5 +1,6 @@
 <?php
 
+use App\Console\Commands\DispatchEnquiryNotifications;
 use App\Jobs\InfrastructureProbe;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
@@ -14,6 +15,7 @@ Artisan::command('infrastructure:ready', function () {
 })->purpose('Check infrastructure connections without requiring migrated tables');
 
 Schedule::command('horizon:snapshot')->everyFiveMinutes()->onOneServer()->withoutOverlapping();
+Schedule::command(DispatchEnquiryNotifications::class)->everyMinute()->onOneServer()->withoutOverlapping();
 Schedule::call(fn () => Cache::put('infrastructure:scheduler-heartbeat', time(), 180))
     ->name('infrastructure-heartbeat')->everyMinute()->onOneServer()->withoutOverlapping();
 

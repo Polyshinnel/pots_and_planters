@@ -29,13 +29,15 @@ Pots & Planters 2.0 — премиальный B2B-сайт кашпо, деко
 
 BE-02/03 считаются завершёнными согласно предыдущей проверке репозитория.
 
+- BE-07 — Заявки и Telegram: реализован и принят в локальной dev-среде для Contact, Catalogue Download, Filament Enquiries и Telegram; ручная приёмка BE-07.6d — **31/31 PASS**. Автоматические проверки из BE-07.5 handoff: Laravel — 80 тестов / 572 assertions; enquiry/admin/delivery/download и Catalogue API profile — 28 / 183; frontend typecheck, suites catalog/product/enquiry/forms/contacts — 41 всего; production-mode build, SSR/API smoke и `git diff --check` прошли. `NEXT_PUBLIC_ENQUIRIES_ENABLED=true` задаётся только в `compose.dev.yaml`; production activation, миграции и deploy не выполнялись. Product Enquiry и Cart Enquiry остаются отключены до BE-08. Открытые задачи: Squid на staging, S3 backup, retention cleanup и юридическая экспертиза Privacy Policy.
+
 ## Согласованный порядок
 
 1. BE-04 — PDF-каталоги.
 2. BE-05 — News.
 3. BE-06 — контакты и шоурумы (завершён и принят).
-4. BE-07 — заявки и Telegram (следующий модуль).
-5. BE-08 — товары.
+4. BE-07 — заявки и Telegram (принят в локальной dev-среде).
+5. BE-08 — товары (следующий основной этап).
 6. BE-09 — финальная интеграция и миграция OpenCart.
 
 Solutions подключить после появления реальных товаров, как отдельную подзадачу финальной интеграции. Не забыть этот модуль.
@@ -82,9 +84,13 @@ Google Search Preview, созданный в BE-02, должен повторн�
 
 ## Заявки
 
-Четыре типа: `contact`, `product_enquiry`, `catalogue_download`, `cart_enquiry`.
+Поддерживаемые сервером типы: `contact`, `catalogue_download`, `product_enquiry`, `cart_enquiry`. В локальной dev-среде и приёмке активны Contact и Catalogue Download; Product Enquiry и Cart Enquiry отключены до BE-08, поскольку авторитетного каталога товаров/SKU ещё нет.
 
-Один endpoint `POST /api/v1/enquiries`. Сначала надёжное сохранение в MariaDB, затем Telegram через Horizon. Использовать idempotency, серверные snapshots, retry и безопасную обработку PII. Ошибка Telegram не должна терять заявку.
+Один endpoint `POST /api/v1/enquiries`. Заявка, item/catalogue snapshots, idempotency record и событие MariaDB outbox сохраняются в одной транзакции; успешный ответ отправляется после commit. Повтор с тем же ключом и payload возвращает исходную заявку, конфликтующий payload — `409`; ключ живёт 24 часа. MariaDB — источник истины: scheduler/dispatcher выбирает due deliveries из outbox, резервирует их и передаёт отдельные jobs в Redis/Horizon. Доставки имеют recipient snapshots, lease, retry/backoff и диагностические статусы; сбой enqueue/Telegram не удаляет заявку, terminal failures можно вернуть на retry. Telegram Settings в Filament управляет зашифрованным bot token, настройками Squid proxy и несколькими получателями; предусмотрены admin-only Test Connection и Send Test Message. Прямого fallback при сбое настроенного proxy нет.
+
+Catalogue Download доступен только после сохранения заявки и проверки опубликованного каталога и приватного PDF. Случайный bearer grant хранится как SHA-256 hash, связан с enquiry/catalogue, действует 15 минут и передаётся браузером только в `Authorization`; download endpoint повторно проверяет grant и отдаёт PDF потоково. Grant не размещается в URL или browser storage.
+
+`NEXT_PUBLIC_ENQUIRIES_ENABLED=true` присутствует только в dev Compose; базовая конфигурация и production значение по умолчанию — выключено. Production activation не выполнялась. Открытые задачи: проверить Squid на staging (без direct fallback), настроить S3 backup, реализовать и проверить retention cleanup, получить юридическую экспертизу Privacy Policy. Retention cleanup и S3 backup не считаются реализованными.
 
 Корзина остаётся в localStorage. Не очищать её при ошибке и не удалять недоступные позиции молча.
 
@@ -98,7 +104,7 @@ Google Search Preview, созданный в BE-02, должен повторн�
 
 ## Privacy / Cookies
 
-Путь политики — `/private-policy`, не менять его произвольно. Cookie notice с одной кнопкой `I agree`, сохранение подтверждения на шесть календарных месяцев. Если подключаются необязательные аналитические или маркетинговые cookies, необходим отдельный корректный механизм согласия. Перед запуском реальных заявок обновить Privacy Policy.
+Путь политики — `/private-policy`, не менять его произвольно. Cookie notice с одной кнопкой `I agree`, сохранение подтверждения на шесть календарных месяцев. Если подключаются необязательные аналитические или маркетинговые cookies, необходим отдельный корректный механизм согласия. Текст Privacy Policy обновлён для фактического потока заявок, но требуется юридическая экспертиза; production activation не выполнялась. Retention cleanup и S3 backup остаются открытыми.
 
 ## SEO
 

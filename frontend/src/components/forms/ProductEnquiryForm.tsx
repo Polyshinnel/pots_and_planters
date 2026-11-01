@@ -26,7 +26,7 @@ function ProductForm({ product, quantity, source, onSubmit }: Props) {
     <p className={`${styles.note} ${styles.compactNote}`}>Request a quote for this product. To enquire about several models, use Add to Enquiry and review your basket.</p>
     <ContactFields form={form} compact showCompany={false} />
     <MessageField form={form} compact />
-    <SubmissionFields form={form} label="Request a Quote" compact privacyNotice />
+    <SubmissionFields form={form} label="Request a Quote" compact privacyNotice disabled unavailableMessage="Product enquiries will be available after BE-08 introduces verified product records." />
   </form>;
 }
 export function ProductEnquiryDialog({ opened, onClose, ...props }: Props & { opened: boolean; onClose: () => void }) {

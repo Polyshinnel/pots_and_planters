@@ -15,7 +15,7 @@
   .context dd { margin: 0; }
 }
 .note { margin: 0; color: var(--mantine-color-gray-7); font-size: 14px; line-height: 1.5; overflow-wrap: anywhere; }
-.notice { margin: 0; padding: 16px; background: var(--mantine-color-olive-0); border-radius: var(--mantine-radius-sm); overflow-wrap: anywhere; }
+.notice { box-sizing: border-box; width: 100%; grid-column: 1 / -1; margin: 0; padding: 16px; background: var(--mantine-color-olive-0); border-radius: var(--mantine-radius-sm); overflow-wrap: anywhere; }
 .submit { height: auto; min-height: 50px; margin-top: 8px; }
 .submit span { white-space: normal; }
 @media (max-width: 35.999em) { .fields { grid-template-columns: minmax(0, 1fr); } }
@@ -37,5 +37,7 @@
   .compactNote { max-width: 360px; }
 }
 
-.privacyNotice { margin: 0; color: var(--mantine-color-gray-7); font-size: 12px; line-height: 1.4; text-align: center; }
+.privacyNotice { box-sizing: border-box; width: 100%; max-width: 560px; margin: 0 auto; color: var(--mantine-color-gray-7); font-size: 12px; line-height: 1.4; text-align: center; }
+.downloadResult { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--mantine-color-gray-3); border-radius: var(--mantine-radius-sm); }
+.downloadResult p { margin: 0; font-size: 14px; line-height: 1.45; }
 .privacyNotice a { color: var(--mantine-color-olive-8); text-decoration: underline; text-underline-offset: 2px; }

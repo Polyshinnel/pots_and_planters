@@ -3,6 +3,7 @@
 import { Button, Textarea, TextInput } from '@mantine/core';
 import { fieldLimits } from '@/lib/forms/validation';
 import type { LeadFormState } from './useLeadForm';
+import { enquirySubmissionsEnabled } from '@/lib/forms/enquiries.client';
 import styles from './Forms.module.css';
 
 export function ContactFields({ form, companyLabel = 'Company / Project name', compact = false, showCompany = true }: { form: LeadFormState; companyLabel?: string; compact?: boolean; showCompany?: boolean }) {
@@ -17,10 +18,11 @@ export function ContactFields({ form, companyLabel = 'Company / Project name', c
 export function MessageField({ form, required = false, compact = false, className }: { form: LeadFormState; required?: boolean; compact?: boolean; className?: string }) {
   return <Textarea className={className} label="Message" name="message" required={required} size={compact ? 'sm' : 'md'} radius="xs" minRows={compact ? 2 : 4} autosize maxRows={compact ? 2 : 8} maxLength={fieldLimits.message} disabled={form.pending} value={form.values.message} onChange={(event) => form.change('message', event.currentTarget.value)} error={form.errors.message} />;
 }
-export function SubmissionFields({ form, label, catalogue = false, compact = false, privacyNotice = false }: { form: LeadFormState; label: string; catalogue?: boolean; compact?: boolean; privacyNotice?: boolean }) {
+export function SubmissionFields({ form, label, catalogue = false, compact = false, privacyNotice = false, disabled = !enquirySubmissionsEnabled(), unavailableMessage = 'Online enquiry submissions are temporarily unavailable.' }: { form: LeadFormState; label: string; catalogue?: boolean; compact?: boolean; privacyNotice?: boolean; disabled?: boolean; unavailableMessage?: string }) {
   return <>
-    {!compact && <p className={styles.note}>Online submission is not available yet. Your details stay on this page and are not sent.{catalogue ? ' PDF download will be available after online submission is connected.' : ''}</p>}
-    <Button type="submit" fullWidth loading={form.pending} disabled={form.pending} className={`${styles.submit}${compact ? ` ${styles.compactSubmit}` : ''}`}>{label}</Button>
+    {!compact && <p className={styles.note}>{disabled ? `${unavailableMessage} Your details stay on this page and are not sent.` : catalogue ? 'Your request will be saved before the catalogue download starts.' : 'Your enquiry will be sent securely for our team to review.'}</p>}
+    {compact && disabled && <p className={styles.note} role="status">{unavailableMessage}</p>}
+    <Button type="submit" fullWidth loading={form.pending} disabled={form.pending || form.completed || disabled} className={`${styles.submit}${compact ? ` ${styles.compactSubmit}` : ''}`}>{label}</Button>
     {privacyNotice && <p className={styles.privacyNotice}>By submitting this form, you agree to the <a href="/private-policy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.</p>}
     {form.notice && <p className={styles.notice} role={form.failed ? 'alert' : 'status'} aria-atomic="true">{form.notice}</p>}
   </>;

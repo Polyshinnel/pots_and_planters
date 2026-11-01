@@ -27,9 +27,9 @@ export type CatalogueDownloadPayload = ContactPayload & {
   type: 'catalogue_download'; catalogueId: string; role: CatalogueRole; roleOther?: string;
 };
 export type LeadPayload = ContactEnquiryPayload | ProductEnquiryPayload | CatalogueDownloadPayload;
-/** FE-06 intentionally has no success result. Extend after durable persistence is implemented. */
-export type LeadSubmissionResult = { status: 'unavailable' | 'failed' } | { status: 'persisted'; leadId: string };
-export type LeadSubmitAdapter<P extends LeadPayload> = (payload: P) => Promise<LeadSubmissionResult>;
+export type DownloadGrant = { token: string; expiresAt: string; downloadPath: '/api/v1/catalogues/download'; enquiryHeader: 'X-Catalogue-Enquiry' };
+export type LeadSubmissionResult = { status: 'unavailable' | 'failed' } | { status: 'persisted'; leadId: string; downloadGrant?: DownloadGrant };
+export type LeadSubmitAdapter<P extends LeadPayload> = (payload: P, idempotencyKey: string) => Promise<LeadSubmissionResult>;
 export type LeadFormProps<P extends LeadPayload> = { source?: LeadSource; onSubmit?: LeadSubmitAdapter<P> };
 export type ProductEnquiryContext = {
   id: string; sku: string; name: string; image?: string | null;

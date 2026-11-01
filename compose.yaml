@@ -54,6 +54,8 @@ services:
       context: .
       dockerfile: docker/frontend/Dockerfile
       target: runtime
+      args:
+        NEXT_PUBLIC_ENQUIRIES_ENABLED: ${NEXT_PUBLIC_ENQUIRIES_ENABLED:-false}
     restart: "no"
     init: true
     environment:

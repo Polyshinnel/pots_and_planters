@@ -79,8 +79,10 @@ class CataloguesApiTest extends TestCase
     public function test_empty_results_and_invalid_category_parameters_have_predictable_responses(): void
     {
         $this->getJson('/api/v1/catalogues')->assertOk()->assertExactJson(['data' => []]);
-        $this->getJson('/api/v1/catalogues?category[]=oops')->assertUnprocessable()->assertJsonValidationErrors('category');
-        $this->getJson('/api/v1/catalogues?category=Bad%20Slug')->assertUnprocessable()->assertJsonValidationErrors('category');
+        $this->getJson('/api/v1/catalogues?category[]=oops')->assertUnprocessable()
+            ->assertJsonPath('error.code', 'validation_failed')->assertJsonStructure(['error' => ['fields' => ['category']]]);
+        $this->getJson('/api/v1/catalogues?category=Bad%20Slug')->assertUnprocessable()
+            ->assertJsonPath('error.code', 'validation_failed')->assertJsonStructure(['error' => ['fields' => ['category']]]);
     }
 
     public function test_category_eager_loading_uses_a_fixed_number_of_queries(): void

@@ -11,6 +11,8 @@ COPY frontend/ ./
 CMD ["npm", "run", "dev"]
 
 FROM dependencies AS build
+ARG NEXT_PUBLIC_ENQUIRIES_ENABLED=false
+ENV NEXT_PUBLIC_ENQUIRIES_ENABLED=$NEXT_PUBLIC_ENQUIRIES_ENABLED
 COPY frontend/ ./
 RUN npm run build
 

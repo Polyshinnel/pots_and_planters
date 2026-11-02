@@ -2,9 +2,12 @@
 FROM php:8.4-fpm-bookworm AS php-base
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libicu-dev libzip-dev libonig-dev libxml2-dev libfcgi-bin unzip \
-    && docker-php-ext-install -j$(nproc) bcmath dom intl mbstring pdo_mysql pcntl zip opcache \
+    libfreetype6-dev libjpeg62-turbo-dev libpng-dev libwebp-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
+    && docker-php-ext-install -j$(nproc) bcmath dom gd intl mbstring pdo_mysql pcntl zip opcache \
     && pecl install redis-6.3.0 && docker-php-ext-enable redis \
     && rm -rf /var/lib/apt/lists/*
+RUN docker-php-ext-install exif
 WORKDIR /var/www/html
 COPY docker/backend/php.ini /usr/local/etc/php/conf.d/zz-app.ini
 COPY docker/backend/fpm.conf /usr/local/etc/php-fpm.d/zz-app.conf

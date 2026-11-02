@@ -1,6 +1,6 @@
 # Pots & Planters 2.0 — Project Handoff Context
 
-**Актуально на 22 октября 2026**
+**Актуально на 2 ноября 2026**
 
 ## Проект
 
@@ -30,14 +30,17 @@ Pots & Planters 2.0 — премиальный B2B-сайт кашпо, деко
 BE-02/03 считаются завершёнными согласно предыдущей проверке репозитория.
 
 - BE-07 — Заявки и Telegram: реализован и принят в локальной dev-среде для Contact, Catalogue Download, Filament Enquiries и Telegram; ручная приёмка BE-07.6d — **31/31 PASS**. Автоматические проверки из BE-07.5 handoff: Laravel — 80 тестов / 572 assertions; enquiry/admin/delivery/download и Catalogue API profile — 28 / 183; frontend typecheck, suites catalog/product/enquiry/forms/contacts — 41 всего; production-mode build, SSR/API smoke и `git diff --check` прошли. `NEXT_PUBLIC_ENQUIRIES_ENABLED=true` задаётся только в `compose.dev.yaml`; production activation, миграции и deploy не выполнялись. Product Enquiry и Cart Enquiry остаются отключены до BE-08. Открытые задачи: Squid на staging, S3 backup, retention cleanup и юридическая экспертиза Privacy Policy.
+- BE-08 — D1–D6 утверждены владельцем 2026-11-02. Этапы BE-08.3.1–08.3.5 реализованы и приняты владельцем после ручной проверки Filament: Brand, Supplier, Product Series, Product Types, Attributes/Options и связь Product Type ↔ Attributes. FIX-01 восстановил `public_id` в Telegram payload. BE-08.4.1–08.4.3 реализованы и автоматически проверены; ручная проверка Filament владельцем ожидается. BE-08.4.4 Product Gallery & Media реализован: при создании можно сразу добавить изображения, выбрать главное и настроить ALT; профильные тесты 9/44, полный backend suite 136/977, Pint и миграционный цикл up → rollback → up прошли в `potsandplanters_test`. Сейчас BE-08.4.1–08.4.4 ожидают ручную приёмку Filament владельцем. Product API, публичная галерея, BE-08.4.5, BE-09, импорт OpenCart и production activation не выполнялись.
 
 ## Согласованный порядок
+
+Дополнение BE-08.4.4.1: реализована асинхронная оптимизация Product media через Intervention Image 3.11.10 и GD с WebP/EXIF в общем PHP Docker-образе. Новые оригиналы приватны; Horizon использует существующую `redis/default`, создавая три прозрачных квадратных WebP без увеличения содержимого. Добавлены статусы, безопасные ошибки, защита от повторных jobs и admin Retry. Профильные проверки 30/219, полный backend suite 157/1152; реальная Redis-очередь проверена. Миграция применена только к `potsandplanters_test`, обычная dev-схема не менялась. Legacy backfill и ручная приёмка не выполнялись. Подробности: `docs/backend/BE-08.4.4.1_IMPLEMENTATION_REPORT.md`. BE-08.4.5 не начат.
 
 1. BE-04 — PDF-каталоги.
 2. BE-05 — News.
 3. BE-06 — контакты и шоурумы (завершён и принят).
 4. BE-07 — заявки и Telegram (принят в локальной dev-среде).
-5. BE-08 — товары (следующий основной этап).
+5. BE-08 — товары: D1–D6 утверждены; справочники BE-08.3.1–08.3.5 приняты; реализации BE-08.4.1–08.4.4 ожидают ручной проверки Filament.
 6. BE-09 — финальная интеграция и миграция OpenCart.
 
 Solutions подключить после появления реальных товаров, как отдельную подзадачу финальной интеграции. Не забыть этот модуль.
@@ -96,7 +99,7 @@ Catalogue Download доступен только после сохранения
 
 ## Товары
 
-Самый сложный модуль, поэтому отложен. Реальный OpenCart SQL export нужно исследовать до окончательного проектирования SKU/variants. Нельзя публиковать фиктивные цены и характеристики. Непроверенная цена — `on_enquiry`.
+Модель согласована ADR-01–09 и D1–D6: каждая конфигурация — самостоятельный Product, ProductVariant не вводится; SKU уникален в пределах Brand и нормализуется удалением внешних пробелов и переводом ASCII `a-z` в `A-Z` без изменения внутренних пробелов/пунктуации; цена хранится как nullable `DECIMAL(15,4)` в AED и допускает только NULL либо значение строго больше нуля. У Product обязательны Brand, Supplier и Product Type; Series необязательна и принадлежит тому же Brand. Справочники BE-08.3.1–08.3.5 реализованы и приняты владельцем после ручной проверки Filament. BE-08.4.1 Product Core, BE-08.4.2 Product Categories и BE-08.4.3 Product Attribute Values реализованы и автоматически проверены в `potsandplanters_test`; ручная проверка Filament владельцем остаётся условием приёмки этих CRUD этапов. BE-08.4.3 хранит scalar значения типизированно, option selections отдельно; required характеристики проверяются при переходе в `published`. BE-08.4.4 добавил административную галерею Filament с переиспользуемыми MediaAsset, сортировкой, главным изображением и ALT; автоматические проверки выполнены, ручная проверка владельцем ожидается. Product API и SEO не реализованы. До появления Product API статус `published` не означает доступность товара на публичном сайте. BE-08.4.5 не начат; BE-09 миграция и production activation не выполнялись. Не придумывать товары, SKU, цены или характеристики.
 
 ## Миграция OpenCart
 

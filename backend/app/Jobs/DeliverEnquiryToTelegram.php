@@ -155,6 +155,7 @@ class DeliverEnquiryToTelegram implements ShouldQueue
         };
         $lines = [
             '🔔 <b>New '.e($type).'</b>',
+            '🔖 <b>Reference:</b> '.e((string) $enquiry->public_id),
             '👤 <b>Name:</b> '.e((string) $enquiry->name),
             '📞 <b>Phone:</b> '.e((string) $enquiry->phone),
             '✉️ <b>Email:</b> '.e((string) $enquiry->email),

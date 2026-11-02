@@ -26,6 +26,7 @@ x-php: &php
     REDIS_CACHE_DB: ${REDIS_CACHE_DB:-1}
     CACHE_STORE: redis
     QUEUE_CONNECTION: redis
+    MEDIA_WEBP_QUALITY: ${MEDIA_WEBP_QUALITY:-84}
     SESSION_DRIVER: redis
     SESSION_CONNECTION: default
     SESSION_COOKIE: ${SESSION_COOKIE:-potsandplanters_session}

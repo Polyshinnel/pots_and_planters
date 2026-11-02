@@ -175,13 +175,40 @@ lockfiles/Dockerfile пересоберите соответствующие с�
 sh scripts/verify-dev-hmr.sh
 ```
 
-Тесты HTTP и аутентификации, изолированная SQLite in-memory, без production данных:
+Backend feature tests используют отдельную MariaDB `potsandplanters_test`; подготовка базы описана в `AGENTS.md`:
 
 ```sh
-docker compose -f compose.yaml -f compose.dev.yaml exec backend php artisan test --compact
+docker compose -f compose.yaml -f compose.dev.yaml exec -T backend sh -lc 'DB_DATABASE=potsandplanters_test php artisan test --compact'
 ```
 
 В dev image есть Composer, PHPUnit и `pdo_sqlite`; в production runtime dev-зависимостей нет.
+
+Общий PHP-образ для backend, Horizon и scheduler включает GD с JPEG/PNG/WebP и EXIF.
+Галерея Product использует Intervention Image v3; оригиналы новых загрузок хранятся приватно,
+а `ProcessMediaAsset` создаёт WebP 1000×1000, 250×250 и 100×100 в очереди `redis/default`.
+Storage находится в именованном Docker volume `laravel_storage`, а не в `backend/storage` на хосте.
+Внутри backend/Horizon оригиналы лежат в `/var/www/html/storage/app/private/product-originals`,
+варианты — в `/var/www/html/storage/app/public/product-media`. nginx монтирует тот же volume только для чтения.
+Посмотреть файлы можно из контейнера:
+
+```sh
+docker compose -f compose.yaml -f compose.dev.yaml exec -T backend find storage/app/private/product-originals storage/app/public/product-media -type f
+```
+
+Качество задаётся `MEDIA_WEBP_QUALITY` (по умолчанию 84). Маленькое изображение не увеличивается:
+оно центрируется на прозрачном холсте заданного размера. Статус и Retry доступны в галерее Filament.
+После изменения PHP-зависимостей пересобирайте общий образ и пересоздавайте все три PHP-сервиса:
+
+```sh
+docker compose -f compose.yaml -f compose.dev.yaml build backend
+docker compose -f compose.yaml -f compose.dev.yaml up -d --no-deps backend horizon scheduler
+docker compose -f compose.yaml -f compose.dev.yaml exec -T horizon php -r 'var_export(gd_info()); echo PHP_EOL, "EXIF=", extension_loaded("exif") ? "yes" : "no", PHP_EOL;'
+```
+
+Старые MediaAsset не конвертируются автоматически. Команда `php artisan media:retry <ID>`
+явно ставит один Asset в очередь, если он failed, ещё не поставлен или завис более пяти минут.
+Она отказывает для ready и активных запросов. Подробности хранения, восстановления и ограничений:
+[`BE-08.4.4.1_IMPLEMENTATION_REPORT.md`](docs/backend/BE-08.4.4.1_IMPLEMENTATION_REPORT.md).
 
 ## Проверки и диагностика
 
@@ -206,7 +233,7 @@ sh scripts/verify-acceptance.sh
 сохраняет volumes и возвращается в production после успешных проверок. При ошибке останавливается
 на текущем шаге. Восстановление production: `docker compose -f compose.yaml -f compose.dev.yaml down`,
 затем `docker compose up -d --wait --wait-timeout 180`. Запускайте этот прогон локально.
-В тестах параметры SQLite in-memory принудительно перекрывают Compose DB environment.
+В feature tests `phpunit.xml` принудительно выбирает `potsandplanters_test`, а `Tests\TestCase` проверяет имя базы.
 
 Нужно отдельно проверить браузером стили Mantine, вход/выход Filament и Livewire без ошибок.
 Для проверки порта в redirect: `curl -I http://localhost:8080/admin` — Location должен

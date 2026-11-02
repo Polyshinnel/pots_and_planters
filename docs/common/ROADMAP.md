@@ -1,6 +1,6 @@
 # Pots & Planters 2.0 — Roadmap
 
-**Срез на 22 октября 2026 года.** BE-05, BE-06 и BE-07 приняты; BE-07 принят в локальной dev-среде. Следующий основной этап — BE-08 Products.
+**Срез на 2 ноября 2026 года.** BE-05, BE-06 и BE-07 приняты; BE-07 принят в локальной dev-среде. D1–D6 для BE-08 утверждены; BE-08.3.1–08.3.5 реализованы и приняты владельцем после ручной проверки Filament. BE-08.4.1–08.4.3 реализованы и автоматически проверены; ручная проверка Filament владельцем остаётся условием приёмки.
 
 ## Легенда
 
@@ -24,7 +24,7 @@
 | BE-05 | News | ✅ | Завершён. Вертикальная реализация: MariaDB, Laravel, Filament RichEditor/live preview, API и Next.js без mock fallback. Полный backend suite 50/50 (371 assertions), News-focused 11/11 (188), Pint, frontend typecheck/regression tests и production build пройдены. Importer dry-run: 7 записей, 3 категории; семь изображений совпадают с fixture по SHA-256. API/SSR smoke: Page SEO API и canonical архива, SSR 7/7 с canonical/NewsArticle JSON-LD, неизвестный slug 404; новая тестовая публикация отобразилась после build без пересборки. Владелец проекта вручную подтвердил импорт, создание статьи и работу Filament. Production migration/import/deploy не выполнялись. |
 | BE-06 | Контакты и шоурумы | ✅ | Завершён и принят владельцем. Filament CRUD и singleton settings → `GET /api/v1/contacts` → Next.js SSR; единый источник для Footer, Home, Contacts, About, Catalogues, Product и Cart/Enquiry, без runtime mock fallback. Backend suite 57/57 (427 assertions), frontend typecheck, contacts 3/3, catalog 12/12, product 9/9, enquiry 8/8, forms 4/4, production build и Pint для затронутых PHP-файлов прошли. Проверены точные три шоурума и primary DEVA, пустой ответ, 503, переключение primary и снятие публикации. Контактное изменение в тестовой БД появилось в SSR после build без пересборки. Общий Pint выявил 11 style issues вне BE-06; browser-level Filament smoke не выполнялся. Владелец подтвердил полное закрытие. Тестовая БД очищена; production operations не выполнялись. |
 | BE-07 | Заявки и Telegram | 🧪 | Принят в локальной dev-среде для Contact, Catalogue Download, Filament Enquiries и Telegram; ручная приёмка BE-07.6d — 31/31 PASS. Contact/Catalogue активны только в dev; Product Enquiry и Cart Enquiry отключены до BE-08. `NEXT_PUBLIC_ENQUIRIES_ENABLED=true` задан только в dev Compose. Production activation не выполнялась. Открыты Squid на staging, S3 backup, retention cleanup и юридическая экспертиза Privacy Policy. |
-| BE-08 | Товары | ▶️ | Следующий основной этап. Исследовать OpenCart SQL до проектирования вариантов и SKU; Product Enquiry и Cart Enquiry остаются выключенными до появления авторитетных product/SKU данных. |
+| BE-08 | Товары | 🟡 | D1–D6 утверждены 2026-11-02. BE-08.3.1–08.3.5 (Brand/Supplier, Series, Product Types, Attributes/Options и их связь) реализованы и приняты владельцем после ручной проверки Filament. FIX-01 восстановил `public_id` в Telegram payload. BE-08.4.1–08.4.3 имеют автоматические проверки и ожидают ручную проверку Filament владельцем. BE-08.4.4 Product Gallery & Media реализован, включая выбор main и ALT на форме Create Product: профильные тесты 9/9 (44 assertions), полный backend suite 136/136 (977 assertions), Pint `--test` и `git diff --check` прошли; миграция проверена только в `potsandplanters_test` с циклом up → rollback → up. Главная картинка защищена уникальным generated key MariaDB, файлы повторно используются и не удаляются при отвязке. Product Enquiry и Cart Enquiry остаются выключенными; Product API и публичный каталог не реализованы. Ручная приёмка BE-08.4.4 ожидается; BE-08.4.5 не начат. |
 | BE-09 | Финальная интеграция и миграция OpenCart | ⬜ | Импорт, URL mapping, 301, SEO, проверка перед запуском; Solutions после появления товаров |
 
 ## Ближайшие действия
@@ -43,7 +43,13 @@
 - [x] Завершить BE-06 после полной приёмки владельцем.
 - [x] Завершить BE-07 локальной dev-приёмкой для Contact, Catalogue Download, Filament Enquiries и Telegram (BE-07.6d: 31/31 PASS); production activation не выполнять.
 - [ ] Проверить Telegram через Squid на staging, настроить S3 backup, реализовать retention cleanup и провести юридическую экспертизу Privacy Policy.
-- [ ] Перейти к BE-08 Products; до его завершения не включать Product Enquiry и Cart Enquiry.
+- [x] Утвердить D1–D6 и принять BE-08.3.1–08.3.5 после ручной проверки Filament; сохранить FIX-01.
+- [x] Реализовать BE-08.4.1 Product Core, BE-08.4.2 Product Categories и BE-08.4.3 Product Attribute Values; запускать их backend migrations только в `potsandplanters_test`.
+- [x] Реализовать BE-08.4.4 Product Gallery & Media; проверить профильные и полные backend tests, Pint, `git diff --check` и миграционный цикл только в `potsandplanters_test`.
+- [x] Реализовать BE-08.4.4.1: Intervention Image 3.11.10 + GD/WebP/EXIF в общем Docker-образе, приватные оригиналы, асинхронные WebP-варианты и admin Retry; профильные тесты 30/219, backend suite 157/1152. Реальные Redis workers проверены с изолированным prefix. Миграция выполнена только в `potsandplanters_test`; ручная приёмка и применение к обычной dev-базе не выполнялись. См. `docs/backend/BE-08.4.4.1_IMPLEMENTATION_REPORT.md`.
+- [x] После применения миграции владельцем в local dev исправить preview: каталог после private → public rename теперь получает 0755, WebP — 0644. Готовые варианты первого товара возвращают HTTP 200; regression suite 158/1166, Pint и `git diff --check` прошли. Ручная приёмка продолжается.
+- [ ] Получить ручную проверку Filament от владельца по BE-08.4.1–08.4.4; BE-08.4.5 не начинать без отдельного задания.
+- [ ] До появления авторитетного Product API не включать Product Enquiry и Cart Enquiry; BE-09 migration/import и production activation не выполнять без отдельного разрешения.
 
 ## Критерии готовности каждого модуля
 
@@ -61,7 +67,7 @@
 2. **BE-05:** нельзя выдумывать новости, даты или изображения; новые slug должны работать без пересборки Next.js.
    Реализация: семизаписный fixture импортёра, sanitizer, Filament resources/live preview, API и Next.js dynamic rendering находятся в репозитории. Автоматизированные проверки, read-only SSR smoke 7/7, новая опубликованная тестовая запись после build и ручная проверка владельца (импорт, новая статья, Filament) подтверждены. Production операции не выполнялись.
 3. **BE-07 (принят в dev):** заявки сохраняются в MariaDB вместе с outbox в одной транзакции; dispatcher передаёт отдельные recipient deliveries в Redis/Horizon, retry и idempotency защищают от потери и дубликатов. Catalogue Download использует 15-минутные PDF grants, привязанные к сохранённой заявке; Telegram Settings управляются через Filament. `NEXT_PUBLIC_ENQUIRIES_ENABLED=true` установлен только в dev Compose; production activation не выполнялась. Открытые задачи BE-07: Squid на staging, S3 backup, retention cleanup, юридическая экспертиза Privacy Policy. Product Enquiry и Cart Enquiry отключены до BE-08.
-4. **BE-08:** структура товаров, SKU и вариантов зависит от исследования реального OpenCart SQL export; неизвестные цены показывать как `on_enquiry`.
+4. **BE-08:** утверждённые решения задают самостоятельный Product без ProductVariant, обязательные Brand/Supplier/Product Type, необязательную Series того же Brand, SKU unique per Brand и AED price `NULL` либо `> 0`. BE-08.4.1 ограничен Product Core и не создаёт публичный API; опубликованный статус не делает запись публично доступной до отдельной реализации публикационного контракта. BE-08.4.2+ и BE-09 ещё не реализованы.
 5. **BE-09:** сохранить старые SEO URL, включая `?product_id=...`, с проверенным соответствием и 301 redirects.
 6. **Privacy:** актуализированный текст Privacy Policy требует юридической экспертизы; путь `/private-policy` сохраняется. Production activation заявок не выполнялась.
 7. **Solutions:** подключить после появления реальных товаров, не забыть в финальной интеграции.

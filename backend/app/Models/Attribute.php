@@ -14,13 +14,13 @@ class Attribute extends Model
 {
     public const TYPES = ['text', 'number', 'boolean', 'select', 'multiselect'];
 
-    protected $fillable = ['name', 'code', 'type', 'unit', 'is_active'];
+    protected $fillable = ['name', 'code', 'type', 'unit', 'short_label', 'is_active', 'is_filterable'];
 
-    protected $attributes = ['is_active' => true];
+    protected $attributes = ['unit' => 'cm', 'is_active' => true, 'is_filterable' => false];
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return ['is_active' => 'boolean', 'is_filterable' => 'boolean'];
     }
 
     public function options(): HasMany
@@ -31,8 +31,20 @@ class Attribute extends Model
     public function productTypes(): BelongsToMany
     {
         return $this->belongsToMany(ProductType::class, 'product_type_attribute')
-            ->withPivot(['is_required', 'is_filterable', 'sort_order'])
+            ->withPivot(['is_required', 'sort_order'])
             ->withTimestamps();
+    }
+
+    public function filterCategories(): BelongsToMany
+    {
+        return $this->belongsToMany(Category::class, 'category_attribute_filters')
+            ->withPivot(['display_type', 'sort_order'])
+            ->withTimestamps();
+    }
+
+    public function selectedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_attribute_assignments')->withTimestamps();
     }
 
     protected static function booted(): void
@@ -53,29 +65,34 @@ class Attribute extends Model
             if ($attribute->isDirty('type') && ProductAttributeValue::query()->where('attribute_id', $attribute->getKey())->exists()) {
                 throw ValidationException::withMessages(['type' => 'The type cannot be changed while products have saved values for this attribute. Clear or migrate those values first.']);
             }
+
+            if ($attribute->isDirty('type') && $attribute->filterCategories()->exists()) {
+                throw ValidationException::withMessages(['type' => 'The type cannot be changed while this attribute is configured as a category filter. Remove its category filter assignments first.']);
+            }
         });
 
         static::saving(function (Attribute $attribute): void {
             $attribute->name = is_string($attribute->name) ? trim($attribute->name) : $attribute->name;
             $attribute->code = self::normalizeKey($attribute->code);
-            $attribute->unit = is_string($attribute->unit) ? trim($attribute->unit) : $attribute->unit;
-            $attribute->unit = $attribute->unit === '' ? null : $attribute->unit;
+            $attribute->unit = is_string($attribute->unit) ? trim($attribute->unit) : '';
+            $attribute->unit = $attribute->unit === '' ? 'cm' : $attribute->unit;
+            $attribute->short_label = is_string($attribute->short_label) ? trim(strip_tags($attribute->short_label)) : $attribute->short_label;
+            $attribute->short_label = $attribute->short_label === '' ? null : $attribute->short_label;
 
             $validator = Validator::make($attribute->getAttributes(), [
                 'name' => ['required', 'string', 'max:255'],
                 'code' => ['required', 'string', 'max:64', 'regex:/^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$/', Rule::unique('attributes', 'code')->ignore($attribute->getKey())],
                 'type' => ['required', 'in:'.implode(',', self::TYPES)],
-                'unit' => ['nullable', 'string', 'max:32'],
+                'unit' => ['required', 'string', 'max:32'],
+                'short_label' => ['nullable', 'string', 'max:32'],
                 'is_active' => ['required', 'boolean'],
+                'is_filterable' => ['required', 'boolean'],
             ]);
 
             if ($validator->fails()) {
                 throw new ValidationException($validator);
             }
 
-            if ($attribute->type !== 'number' && $attribute->unit !== null) {
-                throw ValidationException::withMessages(['unit' => 'A unit is only allowed for number attributes.']);
-            }
         });
     }
 

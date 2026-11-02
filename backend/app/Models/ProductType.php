@@ -22,7 +22,7 @@ class ProductType extends Model
     public function attributes(): BelongsToMany
     {
         return $this->belongsToMany(Attribute::class, 'product_type_attribute')
-            ->withPivot(['is_required', 'is_filterable', 'sort_order'])
+            ->withPivot(['is_required', 'sort_order'])
             ->withTimestamps()
             ->orderByPivot('sort_order')
             ->orderBy('attributes.name')

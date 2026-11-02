@@ -47,6 +47,9 @@ class EditProduct extends EditRecord
     {
         $data['slug'] = $this->record->slug ?: Product::uniqueSlug($this->record->name, (int) $this->record->getKey());
         $data['category_ids'] = $this->record->categories()->pluck('categories.id')->map(fn ($id): int => (int) $id)->all();
+        $data['selected_attribute_ids'] = $this->record->selectedAttributes()->pluck('attributes.id')->map(fn ($id): int => (int) $id)->all();
+        $data['card_display_attribute_ids'] = array_map('intval', $this->record->card_display_attribute_ids ?? []);
+        $data['card_display_attribute_ids'] = array_map(fn (int $id): array => ['attribute_id' => $id], $data['card_display_attribute_ids']);
         $data['attribute_values'] = $this->record->attributeValues()->with(['attribute', 'selections'])->get()->mapWithKeys(function ($value): array {
             $attribute = $value->attribute;
             $state = match ($attribute->type) {
@@ -59,6 +62,8 @@ class EditProduct extends EditRecord
 
             return [$value->attribute_id => $state];
         })->all();
+        $optionalIds = $this->record->productType->attributes()->wherePivot('is_required', false)->pluck('attributes.id')->map(fn ($id): int => (int) $id)->all();
+        $data['selected_attribute_ids'] = array_values(array_unique([...$data['selected_attribute_ids'], ...array_intersect($optionalIds, array_map('intval', array_keys($data['attribute_values'])))]));
 
         return $data;
     }

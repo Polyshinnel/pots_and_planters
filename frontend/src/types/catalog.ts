@@ -10,7 +10,9 @@ export type Catalogue = {
 export const filterKeys = ['material', 'color', 'size', 'usage'] as const;
 export type FilterKey = typeof filterKeys[number];
 export type CatalogFilters = Partial<Record<FilterKey, string[]>>;
-export type ProductSpecifications = { diameterCm?: number; heightCm?: number; finish?: string };
+export type ProductSpecifications = {
+  diameterCm?: number; heightCm?: number; diameterUnit?: string; heightUnit?: string; finish?: string;
+};
 export type ProductImage = { src: string; alt: string; order?: number };
 export type Product = {
   id: string; slug: string; name: string; sku: string; categoryIds: string[];

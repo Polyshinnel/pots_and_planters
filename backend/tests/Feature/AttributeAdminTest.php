@@ -37,6 +37,7 @@ class AttributeAdminTest extends TestCase
             $this->assertSame($type, $attribute->code);
             $this->assertSame($type, $attribute->name);
             $this->assertTrue($attribute->is_active);
+            $this->assertFalse($attribute->is_filterable);
             $this->assertMatchesRegularExpression('/^[0-9a-f-]{36}$/', $attribute->public_id);
             $this->assertNotNull($attribute->created_at);
             $this->assertNotNull($attribute->updated_at);
@@ -73,32 +74,26 @@ class AttributeAdminTest extends TestCase
         Attribute::query()->create(['name' => 'Second', 'code' => 'duplicate', 'type' => 'text']);
     }
 
-    public function test_unit_is_allowed_only_for_number_and_database_rejects_invalid_type_and_unit(): void
+    public function test_units_default_to_centimetres_and_can_be_set_for_every_attribute_type(): void
     {
         $number = Attribute::query()->create(['name' => 'Height', 'code' => 'height', 'type' => 'number', 'unit' => ' cm ']);
         $this->assertSame('cm', $number->unit);
 
-        try {
-            Attribute::query()->create(['name' => 'Colour', 'code' => 'colour', 'type' => 'select', 'unit' => 'cm']);
-            $this->fail('Units must not be allowed for non-number types.');
-        } catch (ValidationException $exception) {
-            $this->assertArrayHasKey('unit', $exception->errors());
-        }
+        $colour = Attribute::query()->create(['name' => 'Colour', 'code' => 'colour', 'type' => 'select', 'unit' => 'mm']);
+        $this->assertSame('mm', $colour->unit);
+        $default = Attribute::query()->create(['name' => 'Material', 'code' => 'material', 'type' => 'text']);
+        $this->assertSame('cm', $default->unit);
+        $colour->update(['unit' => '']);
+        $this->assertSame('cm', $colour->fresh()->unit);
 
-        foreach ([['type' => 'bogus', 'unit' => null], ['type' => 'text', 'unit' => 'cm']] as $invalid) {
-            try {
-                DB::table('attributes')->insert($invalid + [
-                    'public_id' => (string) Str::uuid(),
-                    'name' => 'Invalid',
-                    'code' => Str::random(10),
-                    'is_active' => true,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-                $this->fail('Database checks must reject invalid attribute data.');
-            } catch (QueryException) {
-                $this->assertTrue(true);
-            }
+        try {
+            DB::table('attributes')->insert([
+                'public_id' => (string) Str::uuid(), 'name' => 'Invalid', 'code' => Str::random(10),
+                'type' => 'bogus', 'unit' => 'cm', 'is_active' => true, 'created_at' => now(), 'updated_at' => now(),
+            ]);
+            $this->fail('Database checks must reject invalid attribute types.');
+        } catch (QueryException) {
+            $this->assertTrue(true);
         }
     }
 
@@ -174,11 +169,13 @@ class AttributeAdminTest extends TestCase
             ->set('data.code', 'product height')
             ->set('data.type', 'number')
             ->set('data.unit', 'cm')
+            ->set('data.is_filterable', true)
             ->call('create')
             ->assertHasNoFormErrors();
 
         $attribute = Attribute::query()->where('code', 'product_height')->firstOrFail();
         $originalId = $attribute->public_id;
+        $this->assertTrue($attribute->is_filterable);
         $attribute->update(['type' => 'select', 'unit' => null]);
 
         Livewire::actingAs($admin)->test(OptionsRelationManager::class, ['ownerRecord' => $attribute, 'pageClass' => EditAttribute::class])
@@ -202,6 +199,7 @@ class AttributeAdminTest extends TestCase
         Livewire::actingAs($admin)->test(EditAttribute::class, ['record' => $attribute->getKey()])
             ->set('data.name', 'Product Height in cm')
             ->set('data.is_active', false)
+            ->set('data.is_filterable', false)
             ->call('save')
             ->assertHasNoFormErrors();
 
@@ -209,6 +207,7 @@ class AttributeAdminTest extends TestCase
         $this->assertSame($originalId, $attribute->public_id);
         $this->assertSame('product_height', $attribute->code);
         $this->assertFalse($attribute->is_active);
+        $this->assertFalse($attribute->is_filterable);
 
         Livewire::actingAs($admin)->test(ListAttributes::class)
             ->searchTable('Product Height in cm')
@@ -218,6 +217,9 @@ class AttributeAdminTest extends TestCase
             ->assertCanSeeTableRecords([$attribute]);
         Livewire::actingAs($admin)->test(ListAttributes::class)
             ->filterTable('is_active', false)
+            ->assertCanSeeTableRecords([$attribute]);
+        Livewire::actingAs($admin)->test(ListAttributes::class)
+            ->filterTable('is_filterable', false)
             ->assertCanSeeTableRecords([$attribute]);
 
         $this->actingAs(User::factory()->create(['is_admin' => false]))

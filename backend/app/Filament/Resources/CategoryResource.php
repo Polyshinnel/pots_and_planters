@@ -6,13 +6,13 @@ use App\Filament\Components\SeoSearchPreview;
 use App\Filament\Resources\CategoryResource\Pages\CreateCategory;
 use App\Filament\Resources\CategoryResource\Pages\EditCategory;
 use App\Filament\Resources\CategoryResource\Pages\ListCategories;
+use App\Filament\Resources\CategoryResource\RelationManagers\FiltersRelationManager;
 use App\Models\Category;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -20,12 +20,16 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static string | \UnitEnum | null $navigationGroup = 'Catalogue';
+
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Catalogue';
+
     protected static ?string $navigationLabel = 'Categories';
 
     public static function form(Schema $schema): Schema
@@ -41,15 +45,15 @@ class CategoryResource extends Resource
                 Textarea::make('description')->label('Category page intro')->required()->rows(3),
                 TextInput::make('intro_heading')->label('Long description heading')->maxLength(255),
                 Repeater::make('intro_paragraphs')->label('Long description')->simple(Textarea::make('paragraph')->required())->default([])->columnSpanFull(),
-                FileUpload::make('image_path')->label('Category image')->required(fn (Get $get): bool => $get('status') === 'published')->image()->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(5120)->disk('public')->directory('categories')->visibility('public')->imageEditor()->imagePreviewHeight('240'),
+                FileUpload::make('image_path')->label('Category image')->required(fn (Get $get): bool => $get('status') === 'published')->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])->maxSize(5120)->disk('public')->directory('categories')->visibility('public')->imageEditor()->imagePreviewHeight('240'),
                 TextInput::make('image_alt')->label('Image alt text')->required(fn (Get $get): bool => $get('status') === 'published')->maxLength(255),
-                Select::make('status')->options(['draft'=>'Draft','published'=>'Published','archived'=>'Archived'])->required()->default('draft')->live(),
+                Select::make('status')->options(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'])->required()->default('draft')->live(),
                 TextInput::make('sort_order')->numeric()->integer()->minValue(0)->required()->default(0),
             ])->columns(2)->columnSpanFull(),
             Section::make('SEO')->schema([
                 TextInput::make('seo_title')->label('SEO Title')->required()->maxLength(255)->live(onBlur: true)->helperText(fn (Get $get) => mb_strlen((string) $get('seo_title')).' characters; recommended around 50–60 characters.'),
                 Textarea::make('seo_description')->label('Meta Description')->required()->rows(3)->maxLength(1000)->live(onBlur: true),
-                FileUpload::make('og_image_path')->label('Open Graph Image')->image()->acceptedFileTypes(['image/jpeg','image/png','image/webp'])->maxSize(5120)->disk('public')->directory('category-og')->visibility('public')->imageEditor(),
+                FileUpload::make('og_image_path')->label('Open Graph Image')->image()->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])->maxSize(5120)->disk('public')->directory('category-og')->visibility('public')->imageEditor(),
                 SeoSearchPreview::make('seo_title', 'seo_description', 'slug', fn (string $slug) => rtrim((string) config('app.url'), '/').'/shop/'.($slug ?: '{slug}')),
             ])->columns(1)->columnSpanFull(),
         ]);
@@ -63,8 +67,28 @@ class CategoryResource extends Resource
         ])->defaultSort('sort_order')->reorderable('sort_order')->recordUrl(fn (Category $record) => static::getUrl('edit', ['record' => $record]));
     }
 
-    public static function getPages(): array { return ['index'=>ListCategories::route('/'),'create'=>CreateCategory::route('/create'),'edit'=>EditCategory::route('/{record}/edit')]; }
-    public static function getEloquentQuery(): Builder { return parent::getEloquentQuery()->orderBy('sort_order')->orderBy('id'); }
-    public static function canDelete(\Illuminate\Database\Eloquent\Model $record): bool { return $record->status !== 'published'; }
-    public static function canDeleteAny(): bool { return false; }
+    public static function getPages(): array
+    {
+        return ['index' => ListCategories::route('/'), 'create' => CreateCategory::route('/create'), 'edit' => EditCategory::route('/{record}/edit')];
+    }
+
+    public static function getRelations(): array
+    {
+        return [FiltersRelationManager::class];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->orderBy('sort_order')->orderBy('id');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return $record->status !== 'published' && ! $record->filterAttributes()->exists();
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return false;
+    }
 }

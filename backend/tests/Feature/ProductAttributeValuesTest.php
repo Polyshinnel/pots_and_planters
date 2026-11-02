@@ -20,6 +20,7 @@ use Filament\Facades\Filament;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Livewire\Livewire;
@@ -112,6 +113,28 @@ class ProductAttributeValuesTest extends TestCase
         }
 
         $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('product_attribute_values', 0);
+        $this->assertDatabaseCount('product_attribute_assignments', 0);
+    }
+
+    public function test_failure_after_assignment_sync_rolls_back_product_assignment_and_value(): void
+    {
+        [$brand, $supplier, $type] = $this->references();
+        [$attribute] = $this->attributes($type, ['text']);
+
+        try {
+            app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $type, [
+                'status' => 'invalid',
+                'attribute_values' => [$attribute->id => 'Rollback'],
+                'selected_attribute_ids' => [$attribute->id],
+            ]));
+            $this->fail('The final Product validation must fail after assignment sync.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('status', $exception->errors());
+        }
+
+        $this->assertDatabaseCount('products', 0);
+        $this->assertDatabaseCount('product_attribute_assignments', 0);
         $this->assertDatabaseCount('product_attribute_values', 0);
     }
 
@@ -213,6 +236,7 @@ class ProductAttributeValuesTest extends TestCase
         [$text, $bool] = $this->attributes($type, ['text', 'boolean']);
         Livewire::actingAs($admin)->test(CreateProduct::class)
             ->set('data.brand_id', $brand->id)->set('data.supplier_id', $supplier->id)->set('data.product_type_id', $type->id)
+            ->set('data.selected_attribute_ids', [$text->id, $bool->id])
             ->set('data.sku', 'ATTRIBUTE-1')->set('data.name', 'Attribute Product')
             ->set("data.attribute_values.{$text->id}", 'Initial')->set("data.attribute_values.{$bool->id}", '0')
             ->call('create')->assertHasNoFormErrors();
@@ -227,6 +251,92 @@ class ProductAttributeValuesTest extends TestCase
         $this->assertDatabaseMissing('product_attribute_values', ['product_id' => $product->id, 'attribute_id' => $bool->id]);
 
         $this->actingAs(User::factory()->create(['is_admin' => false]))->get('/admin/products')->assertForbidden();
+    }
+
+    public function test_selected_empty_optional_attribute_persists_and_is_restored_in_edit_form(): void
+    {
+        [$brand, $supplier, $type] = $this->references();
+        [$attribute] = $this->attributes($type, ['number']);
+        $product = $this->save($brand, $supplier, $type, [], ['selected_attribute_ids' => [$attribute->id]]);
+
+        $this->assertDatabaseHas('product_attribute_assignments', ['product_id' => $product->id, 'attribute_id' => $attribute->id]);
+        $this->assertDatabaseMissing('product_attribute_values', ['product_id' => $product->id, 'attribute_id' => $attribute->id]);
+        Livewire::actingAs(User::factory()->create(['is_admin' => true]))
+            ->test(EditProduct::class, ['record' => $product->id])
+            ->assertFormSet(['selected_attribute_ids' => [$attribute->id], "attribute_values.{$attribute->id}" => null]);
+    }
+
+    public function test_filled_optional_attribute_cannot_be_unselected_until_value_is_cleared(): void
+    {
+        [$brand, $supplier, $type] = $this->references();
+        [$attribute] = $this->attributes($type, ['text']);
+        $product = $this->save($brand, $supplier, $type, [$attribute->id => 'Keep me']);
+
+        try {
+            app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $type, [
+                'selected_attribute_ids' => [], 'attribute_values' => [],
+            ]), $product);
+            $this->fail('Unselecting a filled attribute must be blocked.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('selected_attribute_ids', $exception->errors());
+        }
+        $this->assertSame('Keep me', $product->fresh()->attributeValues()->where('attribute_id', $attribute->id)->value('text_value'));
+
+        app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $type, [
+            'selected_attribute_ids' => [$attribute->id], 'attribute_values' => [$attribute->id => null],
+        ]), $product);
+        app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $type, [
+            'selected_attribute_ids' => [], 'attribute_values' => [],
+        ]), $product);
+        $this->assertDatabaseMissing('product_attribute_assignments', ['product_id' => $product->id, 'attribute_id' => $attribute->id]);
+    }
+
+    public function test_assignment_schema_is_unique_and_type_change_requires_explicit_deselection(): void
+    {
+        $this->assertTrue(Schema::hasTable('product_attribute_assignments'));
+        [$brand, $supplier, $type] = $this->references();
+        [$attribute] = $this->attributes($type, ['text']);
+        $product = $this->save($brand, $supplier, $type, [], ['selected_attribute_ids' => [$attribute->id]]);
+        $otherType = ProductType::query()->create(['name' => 'Another type']);
+
+        try {
+            DB::table('product_attribute_assignments')->insert(['product_id' => $product->id, 'attribute_id' => $attribute->id]);
+            $this->fail('A duplicate Product/Attribute assignment must fail.');
+        } catch (QueryException) {
+            $this->assertDatabaseCount('product_attribute_assignments', 1);
+        }
+        try {
+            app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $type, [
+                'selected_attribute_ids' => [$otherType->id],
+            ]), $product);
+            $this->fail('An attribute id outside the selected Product Type must fail.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('selected_attribute_ids', $exception->errors());
+        }
+
+        try {
+            app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $otherType), $product);
+            $this->fail('A Product Type change must not discard optional selections.');
+        } catch (ValidationException $exception) {
+            $this->assertArrayHasKey('product_type_id', $exception->errors());
+        }
+        $this->assertDatabaseHas('product_attribute_assignments', ['product_id' => $product->id, 'attribute_id' => $attribute->id]);
+    }
+
+    public function test_legacy_value_without_an_assignment_is_treated_as_selected_and_restored(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        [$brand, $supplier, $type] = $this->references();
+        [$attribute] = $this->attributes($type, ['number']);
+        $product = $this->save($brand, $supplier, $type, [$attribute->id => '0']);
+        $product->selectedAttributes()->detach($attribute->id);
+
+        Livewire::actingAs($admin)->test(EditProduct::class, ['record' => $product->id])
+            ->assertFormSet(['selected_attribute_ids' => [$attribute->id], "attribute_values.{$attribute->id}" => '0.000000'])
+            ->call('save')->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('product_attribute_assignments', ['product_id' => $product->id, 'attribute_id' => $attribute->id]);
+        $this->assertSame('0.000000', $product->fresh()->attributeValues()->where('attribute_id', $attribute->id)->value('number_value'));
     }
 
     private function references(): array
@@ -252,16 +362,28 @@ class ProductAttributeValuesTest extends TestCase
         return $attributes;
     }
 
-    private function save(Brand $brand, Supplier $supplier, ProductType $type, array $values): Product
+    private function save(Brand $brand, Supplier $supplier, ProductType $type, array $values, array $overrides = []): Product
     {
-        return app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $type, ['attribute_values' => $values]));
+        return app(ProductCategoryManager::class)->save($this->data($brand, $supplier, $type, array_merge([
+            'attribute_values' => $values,
+            'selected_attribute_ids' => array_values(array_intersect(
+                $type->attributes()->wherePivot('is_required', false)->pluck('attributes.id')->map(fn ($id): int => (int) $id)->all(),
+                array_map('intval', array_keys($values)),
+            )),
+        ], $overrides)));
     }
 
     private function data(Brand $brand, Supplier $supplier, ProductType $type, array $overrides = []): array
     {
+        $values = $overrides['attribute_values'] ?? [];
+        $defaultSelected = is_array($values) ? array_values(array_intersect(
+            $type->attributes()->wherePivot('is_required', false)->pluck('attributes.id')->map(fn ($id): int => (int) $id)->all(),
+            array_map('intval', array_keys($values)),
+        )) : [];
+
         return array_merge([
             'brand_id' => $brand->id, 'supplier_id' => $supplier->id, 'product_type_id' => $type->id,
-            'sku' => 'SKU-'.Str::random(10), 'name' => 'Product',
+            'sku' => 'SKU-'.Str::random(10), 'name' => 'Product', 'selected_attribute_ids' => $defaultSelected,
         ], $overrides);
     }
 

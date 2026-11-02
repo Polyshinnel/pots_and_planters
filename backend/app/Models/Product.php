@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\NewsHtmlSanitizer;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -13,13 +14,13 @@ use Illuminate\Validation\ValidationException;
 
 class Product extends Model
 {
-    protected $fillable = ['brand_id', 'supplier_id', 'product_type_id', 'series_id', 'sku', 'name', 'price_aed', 'status', 'slug', 'seo_title', 'seo_description', 'seo_og_media_asset_id'];
+    protected $fillable = ['brand_id', 'supplier_id', 'product_type_id', 'series_id', 'sku', 'name', 'description', 'price_aed', 'status', 'slug', 'seo_title', 'seo_description', 'seo_og_media_asset_id', 'card_display_attribute_ids'];
 
     protected $attributes = ['status' => 'draft'];
 
     protected function casts(): array
     {
-        return ['price_aed' => 'decimal:4', 'primary_category_id' => 'integer'];
+        return ['price_aed' => 'decimal:4', 'primary_category_id' => 'integer', 'card_display_attribute_ids' => 'array'];
     }
 
     protected static function booted(): void
@@ -50,6 +51,12 @@ class Product extends Model
             }
             if (is_string($product->seo_description)) {
                 $product->seo_description = static::cleanMeta($product->seo_description) ?: null;
+            }
+            if (is_string($product->description)) {
+                $description = blank($product->description)
+                    ? null
+                    : app(NewsHtmlSanitizer::class)->sanitize($product->description);
+                $product->description = blank($description) ? null : $description;
             }
 
             $validator = Validator::make($product->getAttributes(), [
@@ -159,6 +166,11 @@ class Product extends Model
     public function attributeValues(): HasMany
     {
         return $this->hasMany(ProductAttributeValue::class);
+    }
+
+    public function selectedAttributes(): BelongsToMany
+    {
+        return $this->belongsToMany(Attribute::class, 'product_attribute_assignments')->withTimestamps();
     }
 
     public function images(): HasMany

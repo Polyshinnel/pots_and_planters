@@ -11,6 +11,7 @@ use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -26,29 +27,32 @@ class ProductTypeAttributeTest extends TestCase
 
     public function test_attributes_can_be_shared_and_assignment_defaults_and_settings_are_independent(): void
     {
+        $this->assertTrue(Schema::hasColumn('attributes', 'is_filterable'));
+        $this->assertFalse(Schema::hasColumn('product_type_attribute', 'is_filterable'));
+
         $firstType = ProductType::query()->create(['name' => 'Planter']);
         $secondType = ProductType::query()->create(['name' => 'Table']);
         $height = Attribute::query()->create(['name' => 'Height', 'code' => 'height', 'type' => 'number', 'unit' => 'cm']);
-        $colour = Attribute::query()->create(['name' => 'Colour', 'code' => 'colour', 'type' => 'select']);
+        $colour = Attribute::query()->create(['name' => 'Colour', 'code' => 'colour', 'type' => 'select', 'is_filterable' => true]);
 
         $firstType->attributes()->attach($height->id);
-        $firstType->attributes()->attach($colour->id, ['is_required' => true, 'is_filterable' => true, 'sort_order' => 8]);
+        $firstType->attributes()->attach($colour->id, ['is_required' => true, 'sort_order' => 8]);
         $secondType->attributes()->attach($height->id, ['sort_order' => 2]);
 
         $this->assertDatabaseHas('product_type_attribute', [
             'product_type_id' => $firstType->id,
             'attribute_id' => $height->id,
             'is_required' => false,
-            'is_filterable' => false,
             'sort_order' => 0,
         ]);
         $this->assertDatabaseHas('product_type_attribute', [
             'product_type_id' => $firstType->id,
             'attribute_id' => $colour->id,
             'is_required' => true,
-            'is_filterable' => true,
             'sort_order' => 8,
         ]);
+        $this->assertFalse($height->fresh()->is_filterable);
+        $this->assertTrue($colour->fresh()->is_filterable);
         $this->assertSame([$height->id, $colour->id], $firstType->fresh()->attributes->pluck('id')->all());
         $this->assertSame([$firstType->id, $secondType->id], $height->fresh()->productTypes->sortBy('id')->pluck('id')->all());
         $this->assertSame(2, $secondType->fresh()->attributes->first()->pivot->sort_order);
@@ -98,7 +102,6 @@ class ProductTypeAttributeTest extends TestCase
         $relationManager
             ->set('mountedActions.0.data.recordId', $attribute->id)
             ->set('mountedActions.0.data.is_required', true)
-            ->set('mountedActions.0.data.is_filterable', true)
             ->set('mountedActions.0.data.sort_order', 5)
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors();
@@ -107,14 +110,13 @@ class ProductTypeAttributeTest extends TestCase
             'product_type_id' => $type->id,
             'attribute_id' => $attribute->id,
             'is_required' => true,
-            'is_filterable' => true,
             'sort_order' => 5,
         ]);
+        $this->assertFalse($attribute->fresh()->is_filterable);
 
         Livewire::actingAs($admin)->test(AttributesRelationManager::class, ['ownerRecord' => $type, 'pageClass' => EditProductType::class])
             ->mountTableAction('edit', $attribute)
             ->set('mountedActions.0.data.is_required', false)
-            ->set('mountedActions.0.data.is_filterable', false)
             ->set('mountedActions.0.data.sort_order', 1)
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors();
@@ -123,7 +125,6 @@ class ProductTypeAttributeTest extends TestCase
             'product_type_id' => $type->id,
             'attribute_id' => $attribute->id,
             'is_required' => false,
-            'is_filterable' => false,
             'sort_order' => 1,
         ]);
 

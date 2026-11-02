@@ -12,10 +12,38 @@ use Illuminate\Validation\ValidationException;
 class ProductAttributeValueManager
 {
     /** @param array<string|int, mixed> $values */
-    public function save(Product $product, array $values, string $targetStatus): void
+    public function save(Product $product, array $values, array $selectedAttributeIds, string $targetStatus): void
     {
         $assignments = $product->productType()->firstOrFail()->attributes()->with(['options'])->get()->keyBy('id');
         $existing = $product->attributeValues()->with('selections')->get()->keyBy('attribute_id');
+        $previouslySelected = $product->selectedAttributes()->pluck('attributes.id')->map(fn ($id): int => (int) $id)->all();
+        // Values predating the assignment table are selected by definition; never infer
+        // deselection from the absence of a new pivot row.
+        $previouslySelected = array_values(array_unique([...$previouslySelected, ...$existing->keys()->map(fn ($id): int => (int) $id)->all()]));
+        $selected = [];
+        foreach ($selectedAttributeIds as $attributeId) {
+            $attributeId = filter_var($attributeId, FILTER_VALIDATE_INT);
+            if ($attributeId === false || ! $assignments->has($attributeId) || (bool) $assignments->get($attributeId)->pivot->is_required) {
+                throw ValidationException::withMessages(['selected_attribute_ids' => 'Choose only optional attributes assigned to the selected Product Type.']);
+            }
+            $attribute = $assignments->get($attributeId);
+            if (! $attribute->is_active && ! in_array((int) $attributeId, $previouslySelected, true)) {
+                throw ValidationException::withMessages(['selected_attribute_ids' => 'Inactive attributes cannot be newly selected.']);
+            }
+            $selected[] = (int) $attributeId;
+        }
+        $selected = array_values(array_unique($selected));
+        foreach ($previouslySelected as $attributeId) {
+            if (! $assignments->has($attributeId) || (bool) $assignments->get($attributeId)->pivot->is_required || in_array($attributeId, $selected, true)) {
+                continue;
+            }
+            if ($existing->has($attributeId)) {
+                $value = $existing->get($attributeId);
+                if (! $this->isEmptyForRecord($value)) {
+                    throw ValidationException::withMessages(['selected_attribute_ids' => "{$assignments->get($attributeId)->name} has a saved value. Clear it explicitly before removing this attribute."]);
+                }
+            }
+        }
         $normalized = [];
 
         foreach ($values as $attributeId => $value) {
@@ -25,6 +53,9 @@ class ProductAttributeValueManager
             }
 
             $attribute = $assignments->get($attributeId);
+            if (! (bool) $attribute->pivot->is_required && ! in_array((int) $attribute->id, $selected, true) && ! in_array((int) $attribute->id, $previouslySelected, true)) {
+                throw ValidationException::withMessages(["attribute_values.{$attributeId}" => 'Select this optional attribute before entering a value.']);
+            }
             if (! $attribute->is_active && ! $existing->has($attribute->id)) {
                 throw ValidationException::withMessages(["attribute_values.{$attributeId}" => 'Inactive attributes cannot receive new values.']);
             }
@@ -43,18 +74,25 @@ class ProductAttributeValueManager
 
         // Persistence is intentionally performed by ProductCategoryManager inside its transaction.
         $product->setRelation('_pending_attribute_values', collect($normalized));
+        $product->setRelation('_pending_selected_attribute_ids', collect($selected));
     }
 
     /** Persist the previously validated form values while the Product transaction is open. */
     public function persist(Product $product): void
     {
         $values = $product->getRelation('_pending_attribute_values') ?? collect();
+        $selected = $product->getRelation('_pending_selected_attribute_ids') ?? collect();
         $attributes = $product->productType()->firstOrFail()->attributes()->get()->keyBy('id');
         $existing = $product->attributeValues()->with('selections')->get()->keyBy('attribute_id');
 
         foreach ($attributes as $attribute) {
             $value = $values->get($attribute->id);
             if (! $values->has($attribute->id)) {
+                $row = $existing->get($attribute->id);
+                if (! (bool) $attribute->pivot->is_required && ! $selected->contains((int) $attribute->id) && $row && $this->isEmptyForRecord($row)) {
+                    $row->delete();
+                }
+
                 continue;
             }
 
@@ -84,7 +122,14 @@ class ProductAttributeValueManager
                 ]);
             }
         }
+        $product->selectedAttributes()->sync($selected->all());
         $product->unsetRelation('_pending_attribute_values');
+        $product->unsetRelation('_pending_selected_attribute_ids');
+    }
+
+    private function isEmptyForRecord(ProductAttributeValue $value): bool
+    {
+        return $value->text_value === null && $value->number_value === null && $value->boolean_value === null && ! $value->selections->isNotEmpty();
     }
 
     private function normalize(Attribute $attribute, mixed $value, ?ProductAttributeValue $existing): mixed

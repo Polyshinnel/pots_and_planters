@@ -16,10 +16,13 @@ use App\Models\Product;
 use App\Models\ProductSeries;
 use App\Models\ProductType;
 use App\Models\Supplier;
+use App\Services\ProductCardSpecificationsFormatter;
+use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Select as FormSelect;
 use Filament\Forms\Components\Textarea;
@@ -36,6 +39,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 
 class ProductResource extends Resource
 {
@@ -61,8 +65,10 @@ class ProductResource extends Resource
                 Select::make('product_type_id')->label('Product Type')->options(fn (?Product $record): array => ProductType::query()
                     ->where(fn (Builder $query) => $query->where('is_active', true)->when($record, fn (Builder $query) => $query->orWhereKey($record->product_type_id)))
                     ->orderBy('name')->pluck('name', 'id')->all())->searchable()->required()->live()
-                    ->helperText(fn (Get $get, ?Product $record): ?string => $record && (int) $get('product_type_id') !== (int) $record->product_type_id && $record->attributeValues()->exists()
-                        ? 'This product has saved attribute values. Changing Product Type is blocked until those values are explicitly moved or cleared.' : null),
+                    ->helperText(fn (Get $get, ?Product $record): ?string => $record && (int) $get('product_type_id') !== (int) $record->product_type_id
+                        ? ($record->attributeValues()->exists()
+                            ? 'This product has saved attribute values. Changing Product Type is blocked until those values are explicitly moved or cleared.'
+                            : ($record->selectedAttributes()->exists() ? 'This product has selected optional attributes. Remove those selections and save before changing Product Type.' : null)) : null),
                 Select::make('series_id')->label('Series')->placeholder('No series')
                     ->options(fn (Get $get): array => ProductSeries::query()
                         ->where('brand_id', $get('brand_id'))
@@ -86,17 +92,25 @@ class ProductResource extends Resource
                     })
                     ->required(fn (Get $get): bool => $get('status') === 'published')
                     ->helperText('Choose the canonical category from the selected categories. Clear it explicitly for a draft.'),
-                TextInput::make('sku')->label('SKU')->required()->maxLength(100)->dehydrateStateUsing(fn (?string $state): string => trim(strtr((string) $state, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'))),
+                TextInput::make('sku')->label('SKU')->required()->maxLength(100)->live(onBlur: true)->dehydrateStateUsing(fn (?string $state): string => trim(strtr((string) $state, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'))),
                 TextInput::make('name')->label('Name')->required()->maxLength(255)->live(onBlur: true)
                     ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
                         if (blank($get('slug'))) {
                             $set('slug', Product::uniqueSlug((string) $state));
                         }
                     })->dehydrateStateUsing(fn (?string $state): string => trim((string) $state)),
-                TextInput::make('price_aed')->label('Price (AED)')->numeric()->rule('gt:0')->rule('decimal:0,4')->nullable()->helperText('Leave blank for Price on enquiry.'),
+                TextInput::make('price_aed')->label('Price (AED)')->numeric()->rule('gt:0')->rule('decimal:0,4')->nullable()->live(onBlur: true)->helperText('Leave blank for Price on enquiry.'),
                 Select::make('status')->label('Status')->options(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'])->default('draft')->required()
                     ->helperText('Publication status does not expose this Product on the public site; Product API is not part of this stage.'),
             ])->columns(2),
+            Section::make('Product Description')->schema([
+                RichEditor::make('description')->label('Description')->toolbarButtons([
+                    ['bold', 'italic', 'link'],
+                    ['h2', 'h3'],
+                    ['bulletList', 'orderedList'],
+                ])->fileAttachments(false)->nullable()->columnSpanFull()
+                    ->helperText('Supported formatting: paragraphs, H2/H3 headings, lists, bold, italic and inline links.'),
+            ])->columnSpanFull(),
             Section::make('Search engine listing')->schema([
                 TextInput::make('slug')->label('Product slug')->required()->maxLength(255)->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')->unique(ignoreRecord: true)->live(onBlur: true)
                     ->helperText('Globally unique product URL segment. Once set, it is kept when the product name changes.'),
@@ -127,8 +141,59 @@ class ProductResource extends Resource
                     ->with(['attributes.options', 'attributes' => fn ($query) => $query->orderByPivot('sort_order')->orderBy('attributes.name')])
                     ->first()?->attributes ?? collect();
                 $saved = $record?->attributeValues()->with('selections')->get()->keyBy('attribute_id') ?? collect();
+                $previouslySelected = $record?->selectedAttributes()->pluck('attributes.id')->map(fn ($id): int => (int) $id)->all() ?? [];
+                $optional = $assignments->filter(fn (Attribute $attribute): bool => ! (bool) $attribute->pivot->is_required
+                    && ($attribute->is_active || in_array((int) $attribute->id, $previouslySelected, true) || $saved->has($attribute->id)));
+                $selectedIds = array_map('intval', (array) $get('selected_attribute_ids'));
 
-                return $assignments->filter(fn (Attribute $attribute): bool => $attribute->is_active || $saved->has($attribute->id))
+                $components = [];
+                if ($optional->isNotEmpty()) {
+                    $components[] = CheckboxList::make('selected_attribute_ids')->label('Use optional attributes')
+                        ->options($optional->mapWithKeys(fn (Attribute $attribute): array => [$attribute->id => $attribute->name.($attribute->is_active ? '' : ' (inactive, existing assignment)')])->all())
+                        ->default($previouslySelected)->live()->columns(2)->columnSpanFull()
+                        ->helperText('Selected attributes may be left empty. Clear a saved value before removing its selection.');
+                }
+
+                $displayable = $assignments->filter(function (Attribute $attribute) use ($selectedIds, $saved): bool {
+                    return (bool) $attribute->pivot->is_required || in_array((int) $attribute->id, $selectedIds, true) || $saved->has($attribute->id);
+                });
+                $components[] = Repeater::make('card_display_attribute_ids')->label('Product card specifications')
+                    ->schema([
+                        Select::make('attribute_id')->label('Attribute')->options($displayable->mapWithKeys(fn (Attribute $attribute): array => [$attribute->id => $attribute->name])->all())
+                            ->required()->disableOptionsWhenSelectedInSiblingRepeaterItems()->live(),
+                    ])->defaultItems(0)->reorderable()->addActionLabel('Add card attribute')->columns(1)->columnSpanFull()
+                    ->helperText('Choose and reorder the selected attributes shown below the product name. Empty values are omitted.');
+
+                $components[] = Placeholder::make('product_card_preview')->label('Live product card preview')
+                    ->content(function (Get $get) use ($record): View {
+                        $orderedIds = collect($get('card_display_attribute_ids') ?? [])->map(fn ($row): int => (int) ($row['attribute_id'] ?? 0))->filter()->values()->all();
+                        $values = (array) $get('attribute_values');
+                        $specifications = app(ProductCardSpecificationsFormatter::class)->format(
+                            $get('product_type_id') ? (int) $get('product_type_id') : null,
+                            $values,
+                            $orderedIds,
+                        );
+                        $imageUrl = null;
+                        if ($record) {
+                            $asset = $record->images()->where('is_main', true)->with('mediaAsset')->first()?->mediaAsset;
+                            $imageUrl = $asset?->variantUrl('card') ?? $asset?->variantUrl('thumb');
+                        }
+
+                        return view('filament.products.card-preview', [
+                            'imageUrl' => $imageUrl,
+                            'name' => $get('name') ?: 'Product name',
+                            'sku' => $get('sku'),
+                            'specifications' => $specifications,
+                            'price' => $get('price_aed'),
+                            'imagePending' => ! $record && filled($get('gallery_uploads')),
+                        ]);
+                    })->columnSpanFull();
+
+                return [...$components, ...$assignments->filter(function (Attribute $attribute) use ($selectedIds, $saved): bool {
+                    return $attribute->is_active || $saved->has($attribute->id)
+                        ? ((bool) $attribute->pivot->is_required || in_array((int) $attribute->id, $selectedIds, true) || $saved->has($attribute->id))
+                        : false;
+                })
                     ->map(function (Attribute $attribute) use ($saved): mixed {
                         $path = "attribute_values.{$attribute->id}";
                         $required = fn (Get $get): bool => (bool) $attribute->pivot->is_required && $get('status') === 'published';
@@ -136,23 +201,23 @@ class ProductResource extends Resource
                         $selected = $state?->selections->pluck('attribute_option_id')->map(fn ($id): int => (int) $id)->all() ?? [];
 
                         if ($attribute->type === 'text') {
-                            return TextInput::make($path)->label($attribute->name)->required($required)->maxLength(10000);
+                            return TextInput::make($path)->label($attribute->name)->required($required)->maxLength(10000)->live(onBlur: true);
                         }
                         if ($attribute->type === 'number') {
                             return TextInput::make($path)->label($attribute->unit ? "{$attribute->name} ({$attribute->unit})" : $attribute->name)
-                                ->numeric()->step('0.000001')->required($required);
+                                ->numeric()->step('0.000001')->required($required)->live(onBlur: true);
                         }
                         if ($attribute->type === 'boolean') {
                             return FormSelect::make($path)->label($attribute->name)->options(['1' => 'Yes', '0' => 'No'])
-                                ->placeholder('Not set')->nullable()->required($required);
+                                ->placeholder('Not set')->nullable()->required($required)->live();
                         }
 
                         $options = $attribute->options->filter(fn (AttributeOption $option): bool => $option->is_active || in_array($option->id, $selected, true))
                             ->mapWithKeys(fn (AttributeOption $option): array => [$option->id => $option->label.($option->is_active ? '' : ' (inactive, existing value)')])->all();
                         $field = FormSelect::make($path)->label($attribute->name)->options($options)->searchable()->required($required);
 
-                        return $attribute->type === 'multiselect' ? $field->multiple() : $field->placeholder('Not set')->nullable();
-                    })->values()->all();
+                        return $attribute->type === 'multiselect' ? $field->multiple()->live() : $field->placeholder('Not set')->nullable()->live();
+                    })->values()->all()];
             })->columns(2)->columnSpanFull(),
             Section::make('Product Gallery')->schema([
                 Repeater::make('gallery_uploads')->label('Images')->schema([

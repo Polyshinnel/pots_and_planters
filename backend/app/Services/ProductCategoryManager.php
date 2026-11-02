@@ -17,9 +17,30 @@ class ProductCategoryManager
     public function save(array $attributes, ?Product $product = null): Product
     {
         $attributeValues = $attributes['attribute_values'] ?? [];
+        $selectedAttributeIds = $attributes['selected_attribute_ids'] ?? [];
+        $displayRows = $attributes['card_display_attribute_ids'] ?? [];
         unset($attributes['attribute_values']);
+        unset($attributes['selected_attribute_ids']);
+        unset($attributes['card_display_attribute_ids']);
         if (! is_array($attributeValues)) {
             throw ValidationException::withMessages(['attribute_values' => 'Attribute values must be submitted as a map.']);
+        }
+        if (! is_array($selectedAttributeIds)) {
+            throw ValidationException::withMessages(['selected_attribute_ids' => 'Selected attributes must be submitted as a list.']);
+        }
+        if (! is_array($displayRows)) {
+            throw ValidationException::withMessages(['card_display_attribute_ids' => 'Card display attributes must be submitted as an ordered list.']);
+        }
+        $displayIds = [];
+        foreach ($displayRows as $row) {
+            $id = is_array($row) ? ($row['attribute_id'] ?? null) : $row;
+            if (filter_var($id, FILTER_VALIDATE_INT) === false) {
+                throw ValidationException::withMessages(['card_display_attribute_ids' => 'Choose valid attributes for the product card.']);
+            }
+            $displayIds[] = (int) $id;
+        }
+        if (count($displayIds) !== count(array_unique($displayIds))) {
+            throw ValidationException::withMessages(['card_display_attribute_ids' => 'An attribute can appear only once in the card display order.']);
         }
         $categoryIds = $attributes['category_ids'] ?? [];
         $primaryCategoryId = $attributes['primary_category_id'] ?? null;
@@ -41,7 +62,7 @@ class ProductCategoryManager
         sort($categoryIds);
         $primaryCategoryId = $primaryCategoryId === null || $primaryCategoryId === '' ? null : (int) $primaryCategoryId;
 
-        return DB::transaction(function () use ($attributes, $attributeValues, $categoryIds, $primaryCategoryId, $product): Product {
+        return DB::transaction(function () use ($attributes, $attributeValues, $selectedAttributeIds, $displayIds, $categoryIds, $primaryCategoryId, $product): Product {
             if ($categoryIds !== []) {
                 $categories = Category::query()->whereKey($categoryIds)->orderBy('id')->lockForUpdate()->get()->keyBy('id');
                 if ($categories->count() !== count($categoryIds)) {
@@ -55,6 +76,9 @@ class ProductCategoryManager
             $oldCanonical = $record->exists ? app(ProductUrlResolver::class)->canonicalPath($record) : null;
             if ($record->exists && (int) $record->product_type_id !== (int) ($attributes['product_type_id'] ?? $record->product_type_id) && ProductAttributeValue::query()->where('product_id', $record->getKey())->exists()) {
                 throw ValidationException::withMessages(['product_type_id' => 'This product has saved attribute values. Move or clear them explicitly before changing Product Type.']);
+            }
+            if ($record->exists && (int) $record->product_type_id !== (int) ($attributes['product_type_id'] ?? $record->product_type_id) && DB::table('product_attribute_assignments')->where('product_id', $record->getKey())->exists()) {
+                throw ValidationException::withMessages(['product_type_id' => 'This product has selected optional attributes. Remove those selections and save before changing Product Type.']);
             }
             $oldIds = $record->exists ? $record->categories()->pluck('categories.id')->map(fn ($id): int => (int) $id)->all() : [];
             $oldIdSet = array_flip($oldIds);
@@ -82,7 +106,16 @@ class ProductCategoryManager
                 $record->primary_category_id = null;
             }
             $record->fill($attributes);
-            app(ProductAttributeValueManager::class)->save($record, $attributeValues, $targetStatus);
+            app(ProductAttributeValueManager::class)->save($record, $attributeValues, $selectedAttributeIds, $targetStatus);
+            $allowedIds = $record->productType()->firstOrFail()->attributes()->withPivot('is_required')->get()
+                ->filter(fn ($attribute): bool => (bool) $attribute->pivot->is_required
+                    || in_array((int) $attribute->id, array_map('intval', $selectedAttributeIds), true)
+                    || $record->attributeValues()->where('attribute_id', $attribute->id)->exists())
+                ->pluck('id')->map(fn ($id): int => (int) $id)->all();
+            if (array_diff($displayIds, $allowedIds) !== []) {
+                throw ValidationException::withMessages(['card_display_attribute_ids' => 'Only required or selected attributes for this Product Type can appear on the card.']);
+            }
+            $record->card_display_attribute_ids = $displayIds;
             $record->status = 'draft';
             $record->primary_category_id = null;
             $record->save();

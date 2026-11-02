@@ -22,6 +22,10 @@ class Category extends Model
         return DB::transaction(function () {
             static::query()->whereKey($this->getKey())->lockForUpdate()->firstOrFail();
 
+            if ($this->filterAttributes()->exists()) {
+                throw ValidationException::withMessages(['category' => 'Remove this category’s filter configurations before deleting it.']);
+            }
+
             $usedByPublishedCatalogue = $this->catalogues()
                 ->where('catalogues.status', 'published')
                 ->lockForUpdate()
@@ -54,5 +58,14 @@ class Category extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'product_category');
+    }
+
+    public function filterAttributes(): BelongsToMany
+    {
+        return $this->belongsToMany(Attribute::class, 'category_attribute_filters')
+            ->withPivot(['display_type', 'sort_order'])
+            ->withTimestamps()
+            ->orderByPivot('sort_order')
+            ->orderBy('attributes.id');
     }
 }

@@ -31,9 +31,8 @@ class AttributesRelationManager extends RelationManager
         return $schema->components([
             Section::make('Attribute assignment')->schema([
                 Toggle::make('is_required')->label('Required')->default(false)->required(),
-                Toggle::make('is_filterable')->label('Filterable')->default(false)->required(),
                 TextInput::make('sort_order')->label('Order')->numeric()->integer()->default(0)->required(),
-            ])->columns(3),
+            ])->columns(2),
         ]);
     }
 
@@ -46,7 +45,6 @@ class AttributesRelationManager extends RelationManager
             TextColumn::make('unit')->label('Unit')->placeholder('—'),
             IconColumn::make('is_active')->label('Active')->boolean(),
             IconColumn::make('is_required')->label('Required')->boolean()->state(fn (Attribute $record): bool => (bool) $record->pivot->is_required),
-            IconColumn::make('is_filterable')->label('Filterable')->boolean()->state(fn (Attribute $record): bool => (bool) $record->pivot->is_filterable),
             TextColumn::make('sort_order')->label('Order')->sortable(query: fn (Builder $query, string $direction): Builder => $query->orderBy('product_type_attribute.sort_order', $direction)),
         ])->defaultSort('sort_order')->headerActions([
             AttachAction::make()
@@ -58,7 +56,6 @@ class AttributesRelationManager extends RelationManager
                 ->schema(fn (AttachAction $action): array => [
                     $action->getRecordSelect(),
                     Toggle::make('is_required')->label('Required')->default(false)->required(),
-                    Toggle::make('is_filterable')->label('Filterable')->default(false)->required(),
                     TextInput::make('sort_order')->label('Order')->numeric()->integer()->default(0)->required(),
                 ])
                 ->action(function (array $data, RelationManager $livewire): void {
@@ -84,7 +81,6 @@ class AttributesRelationManager extends RelationManager
                     try {
                         DB::transaction(fn () => $relationship->attach($attribute, [
                             'is_required' => (bool) ($data['is_required'] ?? false),
-                            'is_filterable' => (bool) ($data['is_filterable'] ?? false),
                             'sort_order' => (int) ($data['sort_order'] ?? 0),
                         ]));
                     } catch (QueryException $exception) {

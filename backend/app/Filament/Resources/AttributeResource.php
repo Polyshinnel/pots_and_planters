@@ -40,9 +40,13 @@ class AttributeResource extends Resource
                 Select::make('type')->label('Type')->options(array_combine(Attribute::TYPES, Attribute::TYPES))->required()
                     ->disabled(fn (?Attribute $record): bool => $record?->options()->exists() ?? false)
                     ->helperText(fn (?Attribute $record): ?string => $record?->options()->exists() ? 'Type is locked while options exist.' : null),
-                TextInput::make('unit')->label('Unit')->maxLength(32)->visible(fn (callable $get): bool => $get('type') === 'number')
-                    ->dehydrateStateUsing(fn (?string $state): ?string => trim((string) $state) === '' ? null : trim((string) $state)),
+                TextInput::make('unit')->label('Unit')->default('cm')->required()->maxLength(32)
+                    ->helperText('Defaults to cm. Edit the unit when this Attribute uses another measurement.'),
+                TextInput::make('short_label')->label('Short label for product cards')->maxLength(32)->nullable()
+                    ->helperText('Optional display label, for example a concise unit symbol. It is shown only when explicitly configured.'),
                 Toggle::make('is_active')->label('Active')->default(true)->required(),
+                Toggle::make('is_filterable')->label('Filterable')->default(false)->required()
+                    ->helperText('Available for category filter configuration when this Attribute is assigned to at least one Product Type.'),
             ])->columns(2),
         ]);
     }
@@ -56,11 +60,13 @@ class AttributeResource extends Resource
             TextColumn::make('unit')->label('Unit')->placeholder('—')->sortable(),
             TextColumn::make('options_count')->counts('options')->label('Options')->sortable(),
             IconColumn::make('is_active')->label('Active')->boolean()->sortable(),
+            IconColumn::make('is_filterable')->label('Filterable')->boolean()->sortable(),
             TextColumn::make('created_at')->label('Created')->dateTime()->sortable(),
             TextColumn::make('updated_at')->label('Updated')->dateTime()->sortable(),
         ])->filters([
             SelectFilter::make('type')->options(array_combine(Attribute::TYPES, Attribute::TYPES)),
             TernaryFilter::make('is_active')->label('Active')->placeholder('All attributes')->trueLabel('Active')->falseLabel('Inactive'),
+            TernaryFilter::make('is_filterable')->label('Filterable')->placeholder('All attributes')->trueLabel('Filterable')->falseLabel('Not filterable'),
         ])->defaultSort('name')->recordUrl(fn (Attribute $record) => static::getUrl('edit', ['record' => $record]));
     }
 

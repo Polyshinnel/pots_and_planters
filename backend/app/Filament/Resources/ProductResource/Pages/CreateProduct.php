@@ -39,6 +39,9 @@ class CreateProduct extends CreateRecord
         } catch (QueryException $exception) {
             $driverCode = $exception->errorInfo[1] ?? null;
             if ($driverCode === 1062) {
+                if (str_contains($exception->getMessage(), 'products_slug_unique')) {
+                    throw ValidationException::withMessages(['data.slug' => 'This product slug is already used.']);
+                }
                 throw ValidationException::withMessages(['data.sku' => 'This SKU is already used by this Brand.']);
             }
             if (in_array($driverCode, [1205, 1213, 1451, 1452], true)) {

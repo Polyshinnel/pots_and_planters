@@ -52,6 +52,7 @@ class ProductCategoryManager
             $record = $product
                 ? Product::query()->lockForUpdate()->findOrFail($product->getKey())
                 : new Product;
+            $oldCanonical = $record->exists ? app(ProductUrlResolver::class)->canonicalPath($record) : null;
             if ($record->exists && (int) $record->product_type_id !== (int) ($attributes['product_type_id'] ?? $record->product_type_id) && ProductAttributeValue::query()->where('product_id', $record->getKey())->exists()) {
                 throw ValidationException::withMessages(['product_type_id' => 'This product has saved attribute values. Move or clear them explicitly before changing Product Type.']);
             }
@@ -96,6 +97,13 @@ class ProductCategoryManager
             $record->primary_category_id = $primaryCategoryId;
             $record->status = $targetStatus;
             $record->save();
+
+            $record->load('primaryCategory');
+            $newCanonical = app(ProductUrlResolver::class)->canonicalPath($record);
+            app(ProductUrlResolver::class)->assertCanonicalAvailable($record, $newCanonical);
+            if ($oldCanonical !== null && $oldCanonical !== $newCanonical) {
+                app(ProductUrlResolver::class)->recordAlias($record, $oldCanonical);
+            }
 
             return $record->load(['categories', 'primaryCategory']);
         });

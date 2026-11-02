@@ -13,7 +13,7 @@ use Illuminate\Validation\ValidationException;
 
 class Product extends Model
 {
-    protected $fillable = ['brand_id', 'supplier_id', 'product_type_id', 'series_id', 'sku', 'name', 'price_aed', 'status'];
+    protected $fillable = ['brand_id', 'supplier_id', 'product_type_id', 'series_id', 'sku', 'name', 'price_aed', 'status', 'slug', 'seo_title', 'seo_description', 'seo_og_media_asset_id'];
 
     protected $attributes = ['status' => 'draft'];
 
@@ -42,6 +42,16 @@ class Product extends Model
             $product->sku = is_string($product->sku) ? trim(strtr($product->sku, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ')) : $product->sku;
             $product->name = is_string($product->name) ? trim($product->name) : $product->name;
 
+            if (blank($product->slug)) {
+                $product->slug = static::uniqueSlug((string) $product->name, $product->getKey());
+            }
+            if (is_string($product->seo_title)) {
+                $product->seo_title = static::cleanMeta($product->seo_title) ?: null;
+            }
+            if (is_string($product->seo_description)) {
+                $product->seo_description = static::cleanMeta($product->seo_description) ?: null;
+            }
+
             $validator = Validator::make($product->getAttributes(), [
                 'brand_id' => ['required', 'integer', 'exists:brands,id'],
                 'supplier_id' => ['required', 'integer', 'exists:suppliers,id'],
@@ -52,6 +62,10 @@ class Product extends Model
                 ],
                 'sku' => ['required', 'string', 'max:100', Rule::unique('products', 'sku')->where('brand_id', $product->brand_id)->ignore($product->getKey())],
                 'name' => ['required', 'string', 'max:255'],
+                'slug' => ['required', 'string', 'max:255', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('products', 'slug')->ignore($product->getKey())],
+                'seo_title' => ['nullable', 'string', 'max:255'],
+                'seo_description' => ['nullable', 'string', 'max:1000'],
+                'seo_og_media_asset_id' => ['nullable', 'integer', Rule::exists('media_assets', 'id')->where('processing_status', 'ready')],
                 'price_aed' => ['nullable', 'numeric', 'gt:0', 'decimal:0,4', 'max:99999999999.9999'],
                 'status' => ['required', Rule::in(['draft', 'published', 'archived'])],
             ]);
@@ -68,6 +82,48 @@ class Product extends Model
                 throw ValidationException::withMessages(['primary_category_id' => 'A published product must have at least one category and a primary category.']);
             }
         });
+    }
+
+    public static function uniqueSlug(string $name, ?int $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: 'product';
+        $slug = $base;
+        $suffix = 2;
+
+        while (static::query()->where('slug', $slug)->when($ignoreId, fn ($query) => $query->whereKeyNot($ignoreId))->exists()) {
+            $slug = $base.'-'.$suffix++;
+        }
+
+        return $slug;
+    }
+
+    public function getEffectiveSeoTitleAttribute(): string
+    {
+        return $this->seo_title ?: $this->name;
+    }
+
+    public function getEffectiveSeoDescriptionAttribute(): ?string
+    {
+        return $this->seo_description;
+    }
+
+    public function getEffectiveOgImageUrlAttribute(): ?string
+    {
+        $manual = $this->seoOgMediaAsset;
+        if ($manual?->processing_status === 'ready') {
+            return $manual->variantUrl('full') ?? $manual->variantUrl('card') ?? $manual->variantUrl('thumb');
+        }
+
+        $main = $this->images()->where('is_main', true)->with('mediaAsset')->first()?->mediaAsset;
+
+        return $main?->variantUrl('full') ?? $main?->variantUrl('card') ?? $main?->variantUrl('thumb');
+    }
+
+    private static function cleanMeta(string $value): string
+    {
+        $value = preg_replace('~<(script|style)\b[^>]*>.*?</\1>~is', '', $value) ?? $value;
+
+        return trim(strip_tags($value));
     }
 
     public function brand(): BelongsTo
@@ -108,5 +164,15 @@ class Product extends Model
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order')->orderBy('id');
+    }
+
+    public function seoOgMediaAsset(): BelongsTo
+    {
+        return $this->belongsTo(MediaAsset::class, 'seo_og_media_asset_id');
+    }
+
+    public function urlAliases(): HasMany
+    {
+        return $this->hasMany(ProductUrlAlias::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Components\SeoSearchPreview;
 use App\Filament\Resources\ProductResource\Pages\CreateProduct;
 use App\Filament\Resources\ProductResource\Pages\EditProduct;
 use App\Filament\Resources\ProductResource\Pages\ListProducts;
@@ -10,6 +11,7 @@ use App\Models\Attribute;
 use App\Models\AttributeOption;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\MediaAsset;
 use App\Models\Product;
 use App\Models\ProductSeries;
 use App\Models\ProductType;
@@ -20,11 +22,13 @@ use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Select as FormSelect;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -83,11 +87,36 @@ class ProductResource extends Resource
                     ->required(fn (Get $get): bool => $get('status') === 'published')
                     ->helperText('Choose the canonical category from the selected categories. Clear it explicitly for a draft.'),
                 TextInput::make('sku')->label('SKU')->required()->maxLength(100)->dehydrateStateUsing(fn (?string $state): string => trim(strtr((string) $state, 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'))),
-                TextInput::make('name')->label('Name')->required()->maxLength(255)->dehydrateStateUsing(fn (?string $state): string => trim((string) $state)),
+                TextInput::make('name')->label('Name')->required()->maxLength(255)->live(onBlur: true)
+                    ->afterStateUpdated(function (?string $state, Get $get, Set $set): void {
+                        if (blank($get('slug'))) {
+                            $set('slug', Product::uniqueSlug((string) $state));
+                        }
+                    })->dehydrateStateUsing(fn (?string $state): string => trim((string) $state)),
                 TextInput::make('price_aed')->label('Price (AED)')->numeric()->rule('gt:0')->rule('decimal:0,4')->nullable()->helperText('Leave blank for Price on enquiry.'),
                 Select::make('status')->label('Status')->options(['draft' => 'Draft', 'published' => 'Published', 'archived' => 'Archived'])->default('draft')->required()
                     ->helperText('Publication status does not expose this Product on the public site; Product API is not part of this stage.'),
             ])->columns(2),
+            Section::make('Search engine listing')->schema([
+                TextInput::make('slug')->label('Product slug')->required()->maxLength(255)->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')->unique(ignoreRecord: true)->live(onBlur: true)
+                    ->helperText('Globally unique product URL segment. Once set, it is kept when the product name changes.'),
+                TextInput::make('seo_title')->label('SEO title override')->maxLength(255)->nullable()->live(onBlur: true)
+                    ->helperText('Leave blank to use the product name.'),
+                Textarea::make('seo_description')->label('Meta description override')->rows(3)->maxLength(1000)->nullable()->live(onBlur: true)
+                    ->helperText('Leave blank until a real product description is available.'),
+                Select::make('seo_og_media_asset_id')->label('Open Graph image override')->options(fn (): array => MediaAsset::query()->where('processing_status', 'ready')->get()
+                    ->filter(fn (MediaAsset $asset): bool => $asset->variantUrl('full') !== null)
+                    ->mapWithKeys(fn (MediaAsset $asset): array => [$asset->id => $asset->public_id])->all())->searchable()->nullable()
+                    ->helperText('Leave blank to use the main product image when its media processing is ready.'),
+                SeoSearchPreview::make('seo_title', 'seo_description', 'slug', function (string $slug, Get $get): string {
+                    $category = Category::query()->find($get('primary_category_id'));
+                    if (! $category || blank($slug)) {
+                        return 'Canonical URL unavailable until a primary category and product slug are set';
+                    }
+
+                    return rtrim((string) config('app.url'), '/').'/shop/'.$category->slug.'/'.$slug;
+                }, 'name')->columnSpanFull(),
+            ])->columns(2)->columnSpanFull(),
             Section::make('Product Attributes')->schema(function (Get $get, ?Product $record): array {
                 $typeId = $get('product_type_id');
                 if (! $typeId) {

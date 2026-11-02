@@ -27,6 +27,12 @@ class EditProduct extends EditRecord
         } catch (QueryException $exception) {
             $driverCode = $exception->errorInfo[1] ?? null;
             if ($driverCode === 1062) {
+                if (str_contains($exception->getMessage(), 'products_slug_unique')) {
+                    throw ValidationException::withMessages(['data.slug' => 'This product slug is already used.']);
+                }
+                if (str_contains($exception->getMessage(), 'product_url_aliases_path_unique')) {
+                    throw ValidationException::withMessages(['data.slug' => 'This product URL conflicts with reserved URL history.']);
+                }
                 throw ValidationException::withMessages(['data.sku' => 'This SKU is already used by this Brand.']);
             }
             if (in_array($driverCode, [1205, 1213, 1451, 1452], true)) {
@@ -39,6 +45,7 @@ class EditProduct extends EditRecord
 
     protected function mutateFormDataBeforeFill(array $data): array
     {
+        $data['slug'] = $this->record->slug ?: Product::uniqueSlug($this->record->name, (int) $this->record->getKey());
         $data['category_ids'] = $this->record->categories()->pluck('categories.id')->map(fn ($id): int => (int) $id)->all();
         $data['attribute_values'] = $this->record->attributeValues()->with(['attribute', 'selections'])->get()->mapWithKeys(function ($value): array {
             $attribute = $value->attribute;

@@ -27,5 +27,6 @@ class AppServiceProvider extends ServiceProvider
             Limit::perHour(30)->by((string) $request->ip()),
         ]);
         RateLimiter::for('catalogue-download', fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
+        RateLimiter::for('products-resolve', fn (Request $request) => Limit::perMinute(60)->by((string) $request->ip()));
     }
 }

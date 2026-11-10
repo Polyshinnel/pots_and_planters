@@ -38,4 +38,5 @@ Route::post('/v1/enquiries', [EnquiriesController::class, 'store'])
 Route::get('/v1/news', [NewsController::class, 'index']);
 Route::get('/v1/news/{slug}', [NewsController::class, 'show'])->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');
 Route::get('/v1/products', [ProductReadController::class, 'index']);
+Route::post('/v1/products/resolve', [ProductReadController::class, 'resolve'])->middleware('throttle:products-resolve');
 Route::get('/v1/products/{slug}', [ProductReadController::class, 'show']);

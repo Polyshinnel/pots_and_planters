@@ -22,6 +22,61 @@ class ProductReadController extends Controller
 
     private const LEGACY_KEYS = ['material', 'color', 'size', 'usage'];
 
+    public function resolve(Request $request): JsonResponse
+    {
+        $requestId = (string) Str::uuid();
+        try {
+            $input = $request->json()->all();
+            $errors = [];
+            foreach (array_diff(array_keys($input), ['ids']) as $key) {
+                $errors[$key][] = 'This field is not supported.';
+            }
+            if (! array_key_exists('ids', $input) || ! is_array($input['ids']) || ! array_is_list($input['ids'])) {
+                $errors['ids'][] = 'The ids field must be an array.';
+            } else {
+                if (count($input['ids']) < 1 || count($input['ids']) > 100) {
+                    $errors['ids'][] = 'The ids field must contain between 1 and 100 items.';
+                }
+                $seen = [];
+                foreach ($input['ids'] as $index => $id) {
+                    if (! is_string($id) || ! Str::isUuid($id)) {
+                        $errors["ids.{$index}"][] = 'Each id must be a valid UUID.';
+
+                        continue;
+                    }
+                    $normalized = strtolower($id);
+                    if (isset($seen[$normalized])) {
+                        $errors["ids.{$index}"][] = 'The ids must be unique.';
+                    }
+                    $seen[$normalized] = true;
+                }
+            }
+            if ($errors) {
+                throw ValidationException::withMessages($errors);
+            }
+
+            $ids = $input['ids'];
+            $products = $this->visibleProducts()->whereIn('products.public_id', $ids)
+                ->with($this->listRelations())->get()->keyBy(fn (Product $product) => strtolower((string) $product->public_id));
+            $data = collect($ids)->map(function (string $id) use ($products): array {
+                $product = $products->get(strtolower($id));
+
+                return $product
+                    ? ['id' => $id, 'status' => 'available', 'product' => (new ProductListData($product))->toArray()]
+                    : ['id' => $id, 'status' => 'unavailable'];
+            });
+
+            return response()->json(['data' => $data])->header('Cache-Control', 'no-store');
+        } catch (ValidationException $exception) {
+            return $this->error(422, 'validation_failed', 'The request parameters are invalid.', $requestId, $exception->errors());
+        } catch (QueryException $exception) {
+            report($exception);
+            Log::error('Product API database request failed.', ['request_id' => $requestId]);
+
+            return $this->error(503, 'service_unavailable', 'The product service is temporarily unavailable.', $requestId);
+        }
+    }
+
     public function index(Request $request): JsonResponse
     {
         $requestId = (string) Str::uuid();

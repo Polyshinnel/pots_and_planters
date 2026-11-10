@@ -55,6 +55,24 @@ class EnquiriesAdminTest extends TestCase
         $this->assertFalse(EnquiryResource::canDelete($enquiry));
     }
 
+    public function test_admin_sees_historical_product_snapshot_and_null_price_label(): void
+    {
+        $admin = User::factory()->create(['is_admin' => true]);
+        $enquiry = $this->enquiry(['type' => 'product_enquiry']);
+        $enquiry->items()->create([
+            'product_identifier' => '3bd329e6-0ee8-4eb6-a7dc-66a6f2e2d8fa',
+            'product_public_id' => '3bd329e6-0ee8-4eb6-a7dc-66a6f2e2d8fa',
+            'brand_public_id' => 'abfe0638-4385-491b-bc6b-5a77c3fa89ea',
+            'sku_snapshot' => 'HIST-01', 'brand_name_snapshot' => 'Historical Brand', 'quantity' => 2,
+            'unit_price_aed' => null, 'currency' => 'AED', 'availability_snapshot' => true,
+            'snapshot_at' => now(), 'product_snapshot' => ['name' => 'Archived display name'], 'position' => 0,
+        ]);
+
+        Livewire::actingAs($admin)->test(ViewEnquiry::class, ['record' => $enquiry->id])
+            ->assertSee('Historical Brand')->assertSee('HIST-01')->assertSee('Archived display name')
+            ->assertSee('Price on enquiry');
+    }
+
     public function test_non_admin_cannot_access_enquiry_or_settings_pages(): void
     {
         $this->get('/admin/enquiries')->assertRedirect('/admin/login');

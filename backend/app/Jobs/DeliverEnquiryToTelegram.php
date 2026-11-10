@@ -169,6 +169,14 @@ class DeliverEnquiryToTelegram implements ShouldQueue
         if ($enquiry->catalogue_snapshot) {
             $lines[] = '📚 <b>Catalogue:</b> '.e((string) ($enquiry->catalogue_snapshot['title'] ?? ''));
         }
+        foreach ($enquiry->items as $item) {
+            $snapshot = $item->product_snapshot ?? [];
+            $price = $item->unit_price_aed === null ? 'Price on enquiry' : 'AED '.(string) $item->unit_price_aed;
+            $lines[] = '🪴 <b>Product:</b> '.e((string) ($snapshot['name'] ?? 'Product'))
+                .' — '.e((string) $item->sku_snapshot)
+                .($item->brand_name_snapshot ? ' — '.e((string) $item->brand_name_snapshot) : '')
+                .' × '.(int) $item->quantity.' — '.e($price);
+        }
 
         return implode("\n", $lines);
     }

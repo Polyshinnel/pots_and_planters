@@ -99,6 +99,29 @@ class EnquiryDeliveryAndDownloadsTest extends TestCase
         $this->assertDatabaseHas('enquiry_deliveries', ['id' => $delivery->id, 'status' => 'sent', 'telegram_message_id' => '991', 'attempts' => 1]);
     }
 
+    public function test_telegram_message_uses_stored_product_snapshot_without_live_product_lookup(): void
+    {
+        $this->settings();
+        $enquiry = $this->enquiry(['type' => 'product_enquiry']);
+        $enquiry->items()->create([
+            'product_identifier' => '3bd329e6-0ee8-4eb6-a7dc-66a6f2e2d8fa',
+            'product_public_id' => '3bd329e6-0ee8-4eb6-a7dc-66a6f2e2d8fa',
+            'brand_public_id' => 'abfe0638-4385-491b-bc6b-5a77c3fa89ea',
+            'sku_snapshot' => 'HIST-01', 'brand_name_snapshot' => 'Historical Brand', 'quantity' => 2,
+            'unit_price_aed' => null, 'currency' => 'AED', 'availability_snapshot' => true,
+            'snapshot_at' => now(), 'product_snapshot' => ['name' => 'Archived display name'], 'position' => 0,
+        ]);
+        $delivery = $this->delivery($enquiry);
+        Http::fake(['https://api.telegram.org/*/sendMessage' => Http::response(['ok' => true, 'result' => ['message_id' => 992]], 200)]);
+
+        (new DeliverEnquiryToTelegram($delivery->id))->handle(app(TelegramBotClient::class));
+
+        Http::assertSent(fn ($request) => str_contains($request['text'], 'Archived display name')
+            && str_contains($request['text'], 'HIST-01') && str_contains($request['text'], 'Historical Brand')
+            && str_contains($request['text'], 'Price on enquiry'));
+        $this->assertDatabaseHas('enquiry_deliveries', ['id' => $delivery->id, 'status' => 'sent']);
+    }
+
     public function test_rate_limit_retries_with_retry_after_and_permanent_client_error_fails(): void
     {
         $this->settings();

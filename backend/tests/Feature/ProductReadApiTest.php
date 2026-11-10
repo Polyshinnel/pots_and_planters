@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Data\ProductListData;
 use App\Models\Attribute;
 use App\Models\AttributeOption;
 use App\Models\Brand;
@@ -12,6 +13,7 @@ use App\Models\Supplier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 class ProductReadApiTest extends TestCase
@@ -31,6 +33,92 @@ class ProductReadApiTest extends TestCase
         $this->getJson('/api/v1/products/'.$product->slug)->assertOk()->assertHeader('Cache-Control')
             ->assertJsonPath('data.descriptionHtml', '<p>Safe</p>')->assertJsonPath('data.seo.robots', 'noindex,follow')
             ->assertJsonPath('data.seo.title', $product->name)->assertJsonPath('data.seo.description', null);
+    }
+
+    public function test_resolve_returns_public_dto_in_input_order_and_unavailable_is_private(): void
+    {
+        [$first] = $this->product(['sku' => 'SAME', 'price_aed' => '12.3400']);
+        [$second] = $this->product(['sku' => 'SAME', 'price_aed' => null]);
+        $hidden = $this->product(['name' => 'Secret Name'])[0];
+        $hidden->update(['status' => 'draft']);
+        $unknown = (string) Str::uuid();
+
+        $response = $this->postJson('/api/v1/products/resolve', ['ids' => [$second->public_id, $unknown, $first->public_id, $hidden->public_id]])
+            ->assertOk();
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $response->assertExactJson(['data' => [
+            ['id' => $second->public_id, 'status' => 'available', 'product' => (new ProductListData($second->load(['brand', 'primaryCategory', 'categories', 'productType.attributes.options', 'attributeValues.selections.option', 'images.mediaAsset'])))->toArray()],
+            ['id' => $unknown, 'status' => 'unavailable'],
+            ['id' => $first->public_id, 'status' => 'available', 'product' => (new ProductListData($first->load(['brand', 'primaryCategory', 'categories', 'productType.attributes.options', 'attributeValues.selections.option', 'images.mediaAsset'])))->toArray()],
+            ['id' => $hidden->public_id, 'status' => 'unavailable'],
+        ]])->assertJsonMissing(['name' => 'Secret Name']);
+    }
+
+    public function test_resolve_hides_archived_products_inactive_suppliers_and_unpublished_primary_categories(): void
+    {
+        [$archived] = $this->product(['name' => 'Archived Secret']);
+        $archived->update(['status' => 'archived']);
+        [$inactiveSupplier] = $this->product(['name' => 'Supplier Secret']);
+        $inactiveSupplier->supplier()->update(['is_active' => false]);
+        [$unpublishedCategory, $category] = $this->product(['name' => 'Category Secret']);
+        $category->update(['status' => 'draft']);
+
+        $this->postJson('/api/v1/products/resolve', ['ids' => [$archived->public_id, $inactiveSupplier->public_id, $unpublishedCategory->public_id]])
+            ->assertOk()->assertExactJson(['data' => [
+                ['id' => $archived->public_id, 'status' => 'unavailable'],
+                ['id' => $inactiveSupplier->public_id, 'status' => 'unavailable'],
+                ['id' => $unpublishedCategory->public_id, 'status' => 'unavailable'],
+            ]])->assertJsonMissing(['name' => 'Archived Secret'])
+            ->assertJsonMissing(['name' => 'Supplier Secret'])->assertJsonMissing(['name' => 'Category Secret']);
+    }
+
+    public function test_resolve_rejects_invalid_batches_and_preserves_existing_product_routes(): void
+    {
+        $valid = (string) Str::uuid();
+        foreach ([[], array_fill(0, 101, $valid), [$valid, $valid], ['bad'], ['x' => $valid]] as $ids) {
+            $this->postJson('/api/v1/products/resolve', ['ids' => $ids])->assertUnprocessable()
+                ->assertJsonStructure(['error' => ['code', 'message', 'requestId', 'errors']]);
+        }
+        $this->postJson('/api/v1/products/resolve', ['ids' => [$valid], 'extra' => true])->assertUnprocessable();
+        [$product] = $this->product();
+        $this->getJson('/api/v1/products')->assertOk();
+        $this->getJson('/api/v1/products/'.$product->slug)->assertOk();
+        $this->getJson('/api/v1/products/resolve')->assertNotFound();
+    }
+
+    public function test_resolve_accepts_one_hundred_ids_without_per_product_queries(): void
+    {
+        $products = [];
+        for ($index = 0; $index < 100; $index++) {
+            $products[] = $this->product(['name' => 'Batch '.$index])[0];
+        }
+        $queries = [];
+        DB::listen(function ($query) use (&$queries): void {
+            if (str_starts_with(strtolower(ltrim($query->sql)), 'select')) {
+                $queries[] = $query->sql;
+            }
+        });
+        $this->postJson('/api/v1/products/resolve', ['ids' => array_map(fn (Product $product) => $product->public_id, $products)])
+            ->assertOk()->assertJsonCount(100, 'data')->assertJsonPath('data.0.status', 'available')
+            ->assertJsonPath('data.99.id', $products[99]->public_id);
+        $batchQueryCount = count($queries);
+        $this->assertLessThanOrEqual(12, $batchQueryCount, 'Batch resolution should eager-load relations rather than query per product.');
+    }
+
+    public function test_resolve_returns_standard_503_envelope_when_database_is_unavailable(): void
+    {
+        $connection = config('database.default');
+        $settings = config("database.connections.{$connection}");
+        config(["database.connections.{$connection}.host" => '127.0.0.1', "database.connections.{$connection}.port" => 1]);
+        DB::purge($connection);
+        try {
+            $this->postJson('/api/v1/products/resolve', ['ids' => [(string) Str::uuid()]])
+                ->assertServiceUnavailable()->assertJsonStructure(['error' => ['code', 'message', 'requestId']])
+                ->assertJsonPath('error.code', 'service_unavailable');
+        } finally {
+            config(["database.connections.{$connection}" => $settings]);
+            DB::purge($connection);
+        }
     }
 
     public function test_visibility_secondary_category_sort_and_unknown_responses(): void

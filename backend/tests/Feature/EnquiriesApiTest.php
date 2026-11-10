@@ -2,7 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Enquiry;
+use App\Models\Product;
+use App\Models\ProductType;
+use App\Models\Supplier;
 use App\Models\TelegramRecipient;
 use App\Models\TelegramSetting;
 use App\Services\TelegramSettingsManager;
@@ -75,13 +80,161 @@ class EnquiriesApiTest extends TestCase
     public function test_product_enquiry_is_rejected_until_authoritative_be08_catalogue_exists(): void
     {
         $this->submit($this->contactPayload([
-            'type' => 'product_enquiry', 'productId' => 'client-id', 'sku' => 'UNVERIFIED', 'quantity' => 2,
-        ]))->assertNotFound()->assertJsonPath('error.code', 'resource_unavailable');
+            'type' => 'product_enquiry', 'apiVersion' => 2, 'product' => ['productId' => (string) Str::uuid(), 'quantity' => 2],
+        ]))->assertNotFound()->assertJsonPath('error.code', 'feature_unavailable');
         $this->submit($this->contactPayload([
-            'type' => 'cart_enquiry', 'items' => [['productId' => 'client-id', 'sku' => 'UNVERIFIED', 'quantity' => 2]],
-        ]), 'cart-key-0000000001')->assertNotFound()->assertJsonPath('error.code', 'resource_unavailable');
+            'type' => 'cart_enquiry', 'apiVersion' => 2, 'items' => [['productId' => (string) Str::uuid(), 'quantity' => 2]],
+        ]), 'cart-key-0000000001')->assertNotFound()->assertJsonPath('error.code', 'feature_unavailable');
 
         $this->assertDatabaseCount('enquiries', 0);
+    }
+
+    public function test_product_enquiry_uses_locked_database_snapshot_and_exact_decimal_price(): void
+    {
+        config(['enquiries.product_enabled' => true]);
+        [$product] = $this->publishedProduct(['sku' => 'SNAP-1', 'name' => 'Snapshot name', 'price_aed' => '1234.5600']);
+
+        $this->submit($this->contactPayload([
+            'type' => 'product_enquiry', 'apiVersion' => 2,
+            'product' => ['productId' => $product->public_id, 'quantity' => 3],
+            'productSnapshot' => ['name' => 'Forged', 'priceAed' => '0'],
+        ]))->assertUnprocessable();
+        $response = $this->submit($this->contactPayload([
+            'type' => 'product_enquiry', 'apiVersion' => 2,
+            'product' => ['productId' => $product->public_id, 'quantity' => 3],
+        ]));
+        $response->assertCreated()->assertJsonPath('data.status', 'persisted');
+        $item = Enquiry::query()->firstOrFail()->items()->firstOrFail();
+        $this->assertSame($product->public_id, $item->product_public_id);
+        $this->assertSame('SNAP-1', $item->sku_snapshot);
+        $this->assertSame('1234.5600', (string) $item->unit_price_aed);
+        $this->assertSame('Snapshot name', $item->product_snapshot['name']);
+        $this->assertSame(3, $item->quantity);
+        $this->assertDatabaseCount('enquiry_outbox_events', 1);
+    }
+
+    public function test_cart_submit_is_atomic_preserves_duplicate_skus_across_brands_and_replays_once(): void
+    {
+        config(['enquiries.cart_enabled' => true]);
+        [$one] = $this->publishedProduct(['sku' => 'SAME-SKU', 'price_aed' => null]);
+        [$two] = $this->publishedProduct(['sku' => 'SAME-SKU', 'price_aed' => '0.0100']);
+        $payload = $this->contactPayload(['type' => 'cart_enquiry', 'apiVersion' => 2, 'items' => [
+            ['productId' => $two->public_id, 'quantity' => 999999], ['productId' => $one->public_id, 'quantity' => 1],
+        ]]);
+
+        $first = $this->submit($payload, 'cart-snapshot-key-0001')->assertCreated();
+        $this->submit($payload, 'cart-snapshot-key-0001')->assertOk()->assertJsonPath('data.enquiryId', $first->json('data.enquiryId'));
+        $items = Enquiry::query()->firstOrFail()->items()->orderBy('position')->get();
+        $this->assertSame([$two->public_id, $one->public_id], $items->pluck('product_public_id')->all());
+        $this->assertSame(['SAME-SKU', 'SAME-SKU'], $items->pluck('sku_snapshot')->all());
+        $this->assertNull($items[1]->unit_price_aed);
+        $this->assertSame('0.0100', (string) $items[0]->unit_price_aed);
+        $this->assertDatabaseCount('enquiries', 1);
+        $this->assertDatabaseCount('enquiry_items', 2);
+        $this->assertDatabaseCount('enquiry_outbox_events', 1);
+    }
+
+    public function test_unavailable_product_rejects_entire_cart_without_items_or_outbox(): void
+    {
+        config(['enquiries.cart_enabled' => true]);
+        [$visible] = $this->publishedProduct();
+        [$hidden] = $this->publishedProduct();
+        $hidden->update(['status' => 'draft']);
+        $this->submit($this->contactPayload(['type' => 'cart_enquiry', 'apiVersion' => 2, 'items' => [
+            ['productId' => $visible->public_id, 'quantity' => 1], ['productId' => $hidden->public_id, 'quantity' => 2],
+        ]]))->assertUnprocessable()->assertJsonPath('error.code', 'products_unavailable')
+            ->assertJsonPath('error.products.0', $hidden->public_id);
+        $this->assertDatabaseCount('enquiries', 0);
+        $this->assertDatabaseCount('enquiry_items', 0);
+        $this->assertDatabaseCount('enquiry_outbox_events', 0);
+    }
+
+    public function test_product_and_cart_v2_validation_rejects_duplicates_bad_uuid_and_client_fields(): void
+    {
+        config(['enquiries.cart_enabled' => true]);
+        $id = (string) Str::uuid();
+        foreach ([
+            ['items' => [['productId' => $id, 'quantity' => 1], ['productId' => strtoupper($id), 'quantity' => 1]]],
+            ['items' => [['productId' => 'not-a-uuid', 'quantity' => 1]]],
+            ['items' => [['productId' => $id, 'quantity' => 1, 'name' => 'forged']]],
+        ] as $overrides) {
+            $this->submit($this->contactPayload(['type' => 'cart_enquiry', 'apiVersion' => 2, ...$overrides]))->assertUnprocessable();
+        }
+        $this->assertDatabaseCount('enquiries', 0);
+    }
+
+    public function test_cart_accepts_one_hundred_products_with_bounded_select_count(): void
+    {
+        config(['enquiries.cart_enabled' => true]);
+        [$first, $category, $brand, $supplier] = $this->publishedProduct();
+        $ids = [$first->public_id];
+        for ($index = 1; $index < 100; $index++) {
+            $productId = (string) Str::uuid();
+            $now = now();
+            $id = DB::table('products')->insertGetId([
+                'public_id' => $productId, 'brand_id' => $brand->id, 'supplier_id' => $supplier->id,
+                'product_type_id' => $first->product_type_id, 'sku' => 'BATCH-'.$index, 'name' => 'Batch '.$index,
+                'price_aed' => null, 'status' => 'published', 'slug' => 'batch-'.$index,
+                'created_at' => $now, 'updated_at' => $now,
+            ]);
+            DB::table('product_category')->insert(['product_id' => $id, 'category_id' => $category->id]);
+            DB::table('products')->where('id', $id)->update(['primary_category_id' => $category->id]);
+            $ids[] = $productId;
+        }
+        $queries = [];
+        DB::listen(function ($query) use (&$queries): void {
+            if (str_starts_with(strtolower(ltrim($query->sql)), 'select')) {
+                $queries[] = $query->sql;
+            }
+        });
+
+        $this->submit($this->contactPayload(['type' => 'cart_enquiry', 'apiVersion' => 2, 'items' => array_map(
+            fn (string $productId): array => ['productId' => $productId, 'quantity' => 1], $ids,
+        )]))->assertCreated();
+
+        $this->assertDatabaseCount('enquiry_items', 100);
+        $this->assertLessThanOrEqual(20, count($queries), 'Snapshot and visibility queries should stay batched at the 100-item limit.');
+    }
+
+    public function test_unpublished_primary_category_and_inactive_supplier_reject_product_submit(): void
+    {
+        config(['enquiries.product_enabled' => true]);
+        [$categoryHidden, $category] = $this->publishedProduct();
+        $category->update(['status' => 'draft']);
+        [$supplierHidden] = $this->publishedProduct();
+        $supplierHidden->supplier()->update(['is_active' => false]);
+
+        foreach ([$categoryHidden, $supplierHidden] as $index => $product) {
+            $this->submit($this->contactPayload([
+                'type' => 'product_enquiry', 'apiVersion' => 2,
+                'product' => ['productId' => $product->public_id, 'quantity' => 1],
+            ]), 'private-product-key-'.str_pad((string) $index, 4, '0', STR_PAD_LEFT))
+                ->assertUnprocessable()->assertJsonPath('error.code', 'products_unavailable');
+        }
+        $this->assertDatabaseCount('enquiries', 0);
+        $this->assertDatabaseCount('enquiry_items', 0);
+        $this->assertDatabaseCount('enquiry_outbox_events', 0);
+    }
+
+    private function publishedProduct(array $overrides = []): array
+    {
+        $brand = Brand::query()->create(['name' => 'Snapshot brand']);
+        $supplier = Supplier::query()->create(['name' => 'Snapshot supplier']);
+        $type = ProductType::query()->create(['name' => 'Snapshot type']);
+        $category = Category::query()->create([
+            'public_id' => 'cat-'.substr(md5((string) Str::uuid()), 0, 12), 'slug' => 'snapshot-'.Str::lower(Str::random(8)),
+            'name' => 'Public category', 'heading' => 'Public category', 'description' => 'Description', 'tile_description' => 'Tile',
+            'seo_title' => 'Title', 'seo_description' => 'Description', 'status' => 'published',
+        ]);
+        $product = Product::query()->create(array_merge([
+            'brand_id' => $brand->id, 'supplier_id' => $supplier->id, 'product_type_id' => $type->id,
+            'sku' => 'SKU-'.Str::upper(Str::random(8)), 'name' => 'Database product', 'price_aed' => null,
+            'status' => 'draft', 'slug' => 'product-'.Str::lower(Str::random(8)),
+        ], $overrides));
+        $product->categories()->attach($category->id);
+        DB::table('products')->where('id', $product->id)->update(['status' => 'published', 'primary_category_id' => $category->id]);
+
+        return [$product->refresh(), $category, $brand, $supplier];
     }
 
     public function test_catalogue_request_uses_only_published_database_snapshot(): void

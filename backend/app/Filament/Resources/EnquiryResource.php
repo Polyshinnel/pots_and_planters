@@ -69,7 +69,13 @@ class EnquiryResource extends Resource
             Section::make('Submitted items')->schema([
                 TextEntry::make('items')->state(fn (Enquiry $record): string => $record->items->isEmpty()
                     ? 'No server-verified product items are available for this enquiry type.'
-                    : $record->items->map(fn ($item): string => $item->sku_snapshot.' × '.$item->quantity)->implode("\n"))->columnSpanFull(),
+                    : $record->items->map(function ($item): string {
+                        $snapshot = $item->product_snapshot ?? [];
+                        $price = $item->unit_price_aed === null ? 'Price on enquiry' : 'AED '.(string) $item->unit_price_aed;
+
+                        return ($item->brand_name_snapshot ? $item->brand_name_snapshot.' — ' : '')
+                            .$item->sku_snapshot.' — '.($snapshot['name'] ?? 'Product').' × '.$item->quantity.' — '.$price;
+                    })->implode("\n"))->columnSpanFull(),
             ]),
             Section::make('Telegram delivery (diagnostic only)')->schema([
                 TextEntry::make('outboxEvent.status')->label('Outbox status')->placeholder('No outbox event'),

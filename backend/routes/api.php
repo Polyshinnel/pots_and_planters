@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ContactsController;
 use App\Http\Controllers\Api\EnquiriesController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\PageSeoController;
+use App\Http\Controllers\Api\ProductReadController;
 use App\Http\Middleware\LimitEnquiryPayload;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -36,3 +37,5 @@ Route::post('/v1/enquiries', [EnquiriesController::class, 'store'])
     ->middleware([LimitEnquiryPayload::class, 'throttle:enquiries']);
 Route::get('/v1/news', [NewsController::class, 'index']);
 Route::get('/v1/news/{slug}', [NewsController::class, 'show'])->where('slug', '[a-z0-9]+(?:-[a-z0-9]+)*');
+Route::get('/v1/products', [ProductReadController::class, 'index']);
+Route::get('/v1/products/{slug}', [ProductReadController::class, 'show']);

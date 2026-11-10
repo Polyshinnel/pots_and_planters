@@ -9,13 +9,16 @@ use App\Models\ProductType;
 class ProductCardSpecificationsFormatter
 {
     /** @param array<string|int, mixed> $values @param list<int> $orderedAttributeIds */
-    public function format(?int $productTypeId, array $values, array $orderedAttributeIds): string
+    public function format(?int $productTypeId, array $values, array $orderedAttributeIds, ?ProductType $loadedType = null): string
     {
         if (! $productTypeId || $orderedAttributeIds === []) {
             return '';
         }
 
-        $attributes = ProductType::query()->find($productTypeId)?->attributes()->with('options')->get()->keyBy('id') ?? collect();
+        $type = $loadedType ?? ProductType::query()->find($productTypeId);
+        $attributes = $type?->relationLoaded('attributes')
+            ? $type->attributes->keyBy('id')
+            : ($type?->attributes()->with('options')->get()->keyBy('id') ?? collect());
         $parts = [];
 
         foreach ($orderedAttributeIds as $id) {

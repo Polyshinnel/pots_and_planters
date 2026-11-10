@@ -9,10 +9,12 @@ export type Catalogue = {
 };
 export const filterKeys = ['material', 'color', 'size', 'usage'] as const;
 export type FilterKey = typeof filterKeys[number];
-export type CatalogFilters = Partial<Record<FilterKey, string[]>>;
+export type CatalogFilters = Record<string, string[] | { min?: string; max?: string }>;
 export type ProductSpecifications = {
   diameterCm?: number; heightCm?: number; diameterUnit?: string; heightUnit?: string; finish?: string;
 };
+export type ProductCardSpecification = { code: string; label: string; value: string; displayText: string };
+export type ProductAttribute = { id: string; code: string; label: string; shortLabel: string | null; type: 'text' | 'number' | 'boolean' | 'select' | 'multiselect'; value: string | boolean | string[] | null; unit: string | null; options: { value: string; label: string }[] };
 export type ProductImage = { src: string; alt: string; order?: number };
 export type Product = {
   id: string; slug: string; name: string; sku: string; categoryIds: string[];
@@ -22,12 +24,14 @@ export type Product = {
   /** Only verified details belong here; attributes remain catalogue filter fixtures. */
   details?: { material?: string; usage?: string; color?: string; size?: string };
   priceVerified?: boolean;
-  image: string | null; specifications?: ProductSpecifications; attributes: Partial<Record<FilterKey, string[]>>;
-  priceAed: number | null; published: boolean; featured: boolean; sample: boolean;
+  image: string | null; imageAlt?: string; specifications?: ProductSpecifications; cardSpecifications?: ProductCardSpecification[]; cardSpecificationsText?: string; attributes: Partial<Record<FilterKey, string[]>>;
+  priceAed: number | string | null; published: boolean; featured: boolean; sample: boolean;
+  canonicalPath?: string; primaryCategorySlug?: string; descriptionHtml?: string | null; seo?: { title: string; description: string | null; ogImage: string | null; robots: 'noindex,follow' }; attributesDto?: ProductAttribute[];
 };
-export type CatalogSort = 'featured' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
+export type CatalogSort = 'newest' | 'featured' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
 export type CatalogQuery = { categoryId?: string; filters: CatalogFilters; sort: CatalogSort; page: number; perPage: number };
-export type CatalogFacet = { key: FilterKey; label: string; values: string[] };
+export type CatalogFacetOption = { value: string; label: string; count: number };
+export type CatalogFacet = { code: string; label: string; type: ProductAttribute['type']; displayType: string; options?: CatalogFacetOption[]; min?: string | null; max?: string | null };
 export type CatalogResult = {
   products: Product[]; total: number; page: number; pageCount: number; perPage: number;
   facets: CatalogFacet[]; sorts: { value: CatalogSort; label: string }[];

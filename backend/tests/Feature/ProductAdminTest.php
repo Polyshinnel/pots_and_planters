@@ -227,7 +227,9 @@ class ProductAdminTest extends TestCase
         $this->actingAs(User::factory()->create(['is_admin' => false]))
             ->get('/admin/products')->assertForbidden();
 
-        $this->assertFalse(collect(app('router')->getRoutes())->contains(fn ($route): bool => str_starts_with($route->uri(), 'api/') && str_contains($route->uri(), 'products')));
+        $productRoutes = collect(app('router')->getRoutes())->filter(fn ($route): bool => str_starts_with($route->uri(), 'api/') && str_contains($route->uri(), 'products'));
+        $this->assertSame(['GET', 'HEAD'], $productRoutes->firstWhere('uri', 'api/v1/products')?->methods());
+        $this->assertSame(['GET', 'HEAD'], $productRoutes->firstWhere('uri', 'api/v1/products/{slug}')?->methods());
     }
 
     public function test_duplicate_sku_and_wrong_series_return_form_errors(): void

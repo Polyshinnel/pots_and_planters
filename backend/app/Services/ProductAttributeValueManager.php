@@ -37,11 +37,8 @@ class ProductAttributeValueManager
             if (! $assignments->has($attributeId) || (bool) $assignments->get($attributeId)->pivot->is_required || in_array($attributeId, $selected, true)) {
                 continue;
             }
-            if ($existing->has($attributeId)) {
-                $value = $existing->get($attributeId);
-                if (! $this->isEmptyForRecord($value)) {
-                    throw ValidationException::withMessages(['selected_attribute_ids' => "{$assignments->get($attributeId)->name} has a saved value. Clear it explicitly before removing this attribute."]);
-                }
+            if ($existing->has($attributeId) && ! $this->isEmptyForRecord($existing->get($attributeId))) {
+                throw ValidationException::withMessages(['selected_attribute_ids' => "{$assignments->get($attributeId)->name} has a saved value. Clear it explicitly and save before removing this attribute."]);
             }
         }
         $normalized = [];
@@ -53,8 +50,10 @@ class ProductAttributeValueManager
             }
 
             $attribute = $assignments->get($attributeId);
-            if (! (bool) $attribute->pivot->is_required && ! in_array((int) $attribute->id, $selected, true) && ! in_array((int) $attribute->id, $previouslySelected, true)) {
-                throw ValidationException::withMessages(["attribute_values.{$attributeId}" => 'Select this optional attribute before entering a value.']);
+            if (! (bool) $attribute->pivot->is_required && ! in_array((int) $attribute->id, $selected, true)) {
+                $normalized[$attribute->id] = null;
+
+                continue;
             }
             if (! $attribute->is_active && ! $existing->has($attribute->id)) {
                 throw ValidationException::withMessages(["attribute_values.{$attributeId}" => 'Inactive attributes cannot receive new values.']);

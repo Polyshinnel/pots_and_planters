@@ -1,6 +1,7 @@
 import type { ProductSpecifications } from '@/types/catalog';
 
-export function formatSpecifications(specifications?: ProductSpecifications): string {
+export function formatSpecifications(specifications?: ProductSpecifications | null): string {
+  if (!specifications) return '';
   if (!specifications) return '';
   const dimensions: string[] = [];
   const diameterUnit = specifications.diameterUnit?.trim() || 'cm';

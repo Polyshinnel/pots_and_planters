@@ -6,8 +6,7 @@ import Link from 'next/link';
 import { Button } from '@mantine/core';
 import { IconBrandWhatsapp, IconMinus, IconPlus, IconShoppingBag } from '@tabler/icons-react';
 import { useWhatsAppUrl } from '@/components/layout/ContactsProvider';
-import { ENQUIRY_PATH, MAX_ENQUIRY_QUANTITY, validQuantity } from '@/lib/enquiry/domain';
-import { enquiryStore, useEnquiry } from '@/lib/enquiry/store';
+import { MAX_ENQUIRY_QUANTITY, validQuantity } from '@/lib/enquiry/domain';
 import { productWhatsAppUrl } from '@/lib/enquiry/whatsapp';
 import { ProductEnquiryDialog } from '@/components/forms/ProductEnquiryForm';
 import type { ProductEnquiryContext } from '@/lib/forms/contracts';
@@ -17,24 +16,12 @@ export function ProductActions({ product }: { product: ProductEnquiryContext & {
   const pathname = usePathname();
   const whatsappBaseUrl = useWhatsAppUrl();
   const [quoteOpened, setQuoteOpened] = useState(false);
-  const { hydrated } = useEnquiry();
   const [quantity, setQuantity] = useState('1');
-  const [feedback, setFeedback] = useState('');
-  const [added, setAdded] = useState(false);
   const [origin, setOrigin] = useState<string | null>(null);
   useEffect(() => { setOrigin(window.location.origin); }, []);
   const value = Number(quantity);
   const valid = quantity.trim() !== '' && validQuantity(value);
   const whatsappUrl = origin ? productWhatsAppUrl(whatsappBaseUrl, product, valid ? value : 1, origin) : null;
-  function add() {
-    if (!valid) return;
-    try {
-      const { persistent } = enquiryStore.addItem(product.id, product.sku, value);
-      setAdded(true);
-      setFeedback(`${value} × ${product.name} (Model: ${product.sku}) added to your enquiry.${persistent ? '' : ' Browser storage is unavailable; keep this tab open to retain your selection.'}`);
-    } catch (error) { setFeedback(error instanceof Error ? error.message : 'Unable to add this model. Please try again.'); }
-  }
-
   return <><div className={styles.actions}>
     <label className={styles.quantityLabel} htmlFor="product-quantity">Quantity</label>
     <div className={styles.quantity}>
@@ -45,12 +32,10 @@ export function ProductActions({ product }: { product: ProductEnquiryContext & {
     </div>
     {!valid && <p id="quantity-error" className={styles.error}>Enter a whole number from 1 to {MAX_ENQUIRY_QUANTITY.toLocaleString('en-US')}.</p>}
     <div className={styles.buttons}>
-      <Button leftSection={<IconShoppingBag size={19} aria-hidden="true" />} disabled={!hydrated || !valid} onClick={add}>Add to Enquiry</Button>
+      <Button leftSection={<IconShoppingBag size={19} aria-hidden="true" />} disabled aria-describedby="product-enquiry-unavailable">Add to Enquiry</Button>
       <Button variant="outline" disabled={!valid} onClick={() => setQuoteOpened(true)}>Request a Quote</Button>
     </div>
-    <p className={styles.note}>Add to Enquiry saves your selection in this browser. Request a Quote opens a single-product form. Online submission is not available yet.</p>
-    <div role="status" aria-live="polite" aria-atomic="true" className={styles.feedback}>{feedback}</div>
-    {added && <Link href={ENQUIRY_PATH}>View enquiry basket →</Link>}
+    <p id="product-enquiry-unavailable" className={styles.note}>Adding products to your enquiry is temporarily unavailable. Request a Quote opens a single-product form. Online submission is not available yet.</p>
     {whatsappUrl
       ? <Button component="a" href={whatsappUrl} target="_blank" rel="noopener noreferrer" variant="subtle"
           aria-disabled={!valid} data-disabled={!valid || undefined} onClick={(event) => { if (!valid) event.preventDefault(); }}

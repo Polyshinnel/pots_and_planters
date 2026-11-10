@@ -5,12 +5,12 @@ import { IconArrowLeft, IconArrowRight } from '@tabler/icons-react';
 import { Autoplay } from 'swiper/modules';
 import type { Swiper as SwiperInstance } from 'swiper';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import type { ProductPreview } from '@/types/home';
+import type { Product } from '@/types/catalog';
 import { ProductCard } from './ProductCard';
 import styles from './Home.module.css';
 import 'swiper/css';
 
-export function FeaturedProductsSlider({ products }: { products: ProductPreview[] }) {
+export function FeaturedProductsSlider({ products }: { products: Product[] }) {
   const [swiper, setSwiper] = useState<SwiperInstance | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const paginationDotCount = 4;

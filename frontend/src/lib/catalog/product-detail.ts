@@ -14,6 +14,7 @@ export function productImages(product: Product): ProductImage[] {
 }
 
 export function productSpecifications(product: Product): { label: string; value: string }[] {
+  if (product.cardSpecifications) return product.cardSpecifications.map(({ label, displayText }) => ({ label, value: displayText }));
   const rows = [
     { label: 'Dimensions', value: formatSpecifications({ ...product.specifications, finish: undefined }) },
     { label: 'Finish', value: product.specifications?.finish },

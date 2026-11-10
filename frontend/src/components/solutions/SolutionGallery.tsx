@@ -10,8 +10,7 @@ import { Swiper, SwiperSlide } from 'swiper/react';
 import { A11y, Keyboard } from 'swiper/modules';
 import type { Swiper as SwiperInstance } from 'swiper';
 import type { ResolvedSolutionScene } from '@/types/solutions';
-import { enquiryStore, useEnquiry } from '@/lib/enquiry/store';
-import { ENQUIRY_PATH, MAX_ENQUIRY_QUANTITY, validQuantity } from '@/lib/enquiry/domain';
+import { MAX_ENQUIRY_QUANTITY, validQuantity } from '@/lib/enquiry/domain';
 import { productImages, productSpecifications } from '@/lib/catalog/product-detail';
 import { formatPrice } from '@/lib/format-price';
 import '@fancyapps/ui/dist/fancybox/fancybox.css';
@@ -41,22 +40,9 @@ function Scene({ scene, categoryId }: { scene: ResolvedSolutionScene; categoryId
   const [failedImages, setFailedImages] = useState<string[]>([]);
   const [activeItem, setActiveItem] = useState<string | null>(null);
   const [quantities, setQuantities] = useState<Record<string, string>>(() => Object.fromEntries(scene.items.map((item) => [item.id, String(item.recommendedQuantity)])));
-  const [feedback, setFeedback] = useState('');
   const swiper = useRef<SwiperInstance | null>(null);
   const reducedMotion = useReducedMotion();
-  const { hydrated } = useEnquiry();
-  const available = scene.items.filter((item) => item.product && item.href);
   const isValid = (id: string) => quantities[id]?.trim() !== '' && validQuantity(Number(quantities[id]));
-  const allValid = available.length > 0 && available.every((item) => isValid(item.id));
-
-  function add(items: typeof scene.items) {
-    try {
-      const lines = items.flatMap((item) => item.product && item.href ? [{ productId: item.product.id, sku: item.product.sku, quantity: Number(quantities[item.id]) }] : []);
-      if (!lines.length) return;
-      const { persistent } = enquiryStore.addItems(lines);
-      setFeedback(`Added to your enquiry: ${items.filter((item) => item.product && item.href).map((item) => `${quantities[item.id]} × ${item.product!.name} (SKU ${item.product!.sku})`).join('; ')}.${persistent ? '' : ' Browser storage is unavailable; keep this tab open to retain your selection.'}`);
-    } catch (error) { setFeedback(error instanceof Error ? error.message : 'Unable to add these items. Please try again.'); }
-  }
 
   function selectItem(id: string) {
     setActiveItem(id);
@@ -128,15 +114,13 @@ function Scene({ scene, categoryId }: { scene: ResolvedSolutionScene; categoryId
                 <div className={styles.quantityRow}><label htmlFor={inputId}>Quantity</label><input id={inputId} type="number" inputMode="numeric" min={1} max={MAX_ENQUIRY_QUANTITY} step={1} value={quantities[item.id]} aria-invalid={!valid} aria-describedby={!valid ? `${inputId}-error` : undefined}
                   onChange={(event) => setQuantities((previous) => ({ ...previous, [item.id]: event.target.value }))} /></div>
                 {!valid && <p id={`${inputId}-error`} className={styles.error}>Enter a whole number from 1 to {MAX_ENQUIRY_QUANTITY.toLocaleString('en-US')}.</p>}
-                <div className={styles.itemActions}><Link href={item.href}>View Product ↗</Link><Button size="compact-sm" variant="outline" disabled={!hydrated || !valid} onClick={() => add([item])}>Add to Enquiry</Button></div>
+                <div className={styles.itemActions}><Link href={item.href}>View Product ↗</Link><Button size="compact-sm" variant="outline" disabled>Add to Enquiry</Button></div>
               </> : <p className={styles.note}>This suggestion is unavailable. <Link href="/shop">Explore Collections</Link></p>}
             </li>;
           })}
         </ol>
-        <Button fullWidth disabled={!hydrated || !allValid} onClick={() => add(available)}>{available.length === scene.items.length ? 'Add Solution to Enquiry' : 'Add Available to Enquiry'}</Button>
+        <Button fullWidth disabled>Add Solution to Enquiry</Button>
         <p className={styles.note}>Saves your selection for an enquiry. A quotation will be confirmed by our team.</p>
-        <div role="status" aria-live="polite" aria-atomic="true" className={styles.feedback}>{feedback}</div>
-        {feedback.startsWith('Added') && <Link href={ENQUIRY_PATH}>Review Enquiry →</Link>}
       </div>
     </div>
   </div>;

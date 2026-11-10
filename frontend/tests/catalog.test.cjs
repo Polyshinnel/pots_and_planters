@@ -47,19 +47,18 @@ test('OR inside a group, AND across groups, accurate no-results and clearing', (
   assert.equal(select({ filters: { color: ['bronze'], material: ['synthetic'] } }).total, 0);
   assert.equal(select({ filters: {} }).total, 16);
 });
-test('facet options come only from the category scope', () => {
+test('mock fixtures do not generate runtime API facets', () => {
   const result = select({ categoryId: 'artificial' });
-  assert.deepEqual(result.facets.find((f) => f.key === 'material').values, ['synthetic']);
-  assert.deepEqual(result.facets.find((f) => f.key === 'color').values, ['green']);
+  assert.deepEqual(result.facets, []);
 });
-test('query parser ignores unknown keys/values, canonicalizes repeated and comma selections', () => {
+test('catalog query handling fails closed on legacy keys and uses API filter grammar', () => {
   const scope = select();
-  const parsed = domain.parseQuery(new URLSearchParams('material=unknown&color=bronze,black&color=black&sort=bogus&page=-2&evil=1'), scope.facets, scope.sorts);
-  assert.deepEqual(parsed.filters, { color: ['black', 'bronze'] });
+  const parsed = domain.parseQuery(new URLSearchParams('material=unknown&color=bronze,black&sort=bogus&page=-2&evil=1'), scope.facets, scope.sorts);
+  assert.deepEqual(parsed.filters, {});
   assert.equal(parsed.page, 1);
-  assert.equal(parsed.sort, 'featured');
-  assert.equal(domain.queryString(parsed), '?color=black%2Cbronze');
-  assert.deepEqual(domain.parseQuery(new URLSearchParams(domain.queryString(parsed)), scope.facets, scope.sorts).filters, parsed.filters);
+  assert.equal(parsed.sort, 'newest');
+  const url = domain.queryString({ ...parsed, filters: { color: ['bronze', 'black', 'black'] } });
+  assert.deepEqual(domain.parseFilterParams(new URLSearchParams(url)).filters, { color: ['bronze', 'black'] });
   for (const page of ['1.5', 'NaN', 'Infinity', '9007199254740992']) assert.equal(domain.parseQuery(new URLSearchParams({ page }), scope.facets, scope.sorts).page, 1);
 });
 test('stable name sorting works in both directions', () => {

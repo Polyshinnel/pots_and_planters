@@ -62,7 +62,9 @@ class MediaAssetProcessor
             $variants = [];
             foreach (config('media.variants') as $name => $size) {
                 $variant = clone $image;
-                $variant->scaleDown($size, $size)->resizeCanvas($size, $size, 'transparent', 'center');
+                // Fit the source proportionally inside the square, then add a
+                // transparent canvas only along the shorter dimension.
+                $variant->scale($size, $size)->resizeCanvas($size, $size, 'transparent', 'center');
                 $bytes = (string) $variant->toWebp(quality: max(1, min(100, config('media.quality'))), strip: true);
                 $path = $staging.'/'.$name.'.webp';
                 if ($bytes === '' || ! $private->put($path, $bytes)) {

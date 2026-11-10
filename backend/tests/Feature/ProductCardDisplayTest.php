@@ -82,7 +82,7 @@ class ProductCardDisplayTest extends TestCase
             $count->id => '0.000001', $available->id => '0', $finish->id => $option->id,
         ], [$count->id, $available->id, $finish->id]);
 
-        $this->assertSame('Count 0.000001 · Available No · Warm white', $formatted);
+        $this->assertSame('Count 0.000001 cm · Available No · Warm white', $formatted);
         $this->assertSame('', app(ProductCardSpecificationsFormatter::class)->format($type->id, [], [$count->id]));
     }
 

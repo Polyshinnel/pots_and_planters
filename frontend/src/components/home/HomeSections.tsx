@@ -2,8 +2,11 @@ import { Container } from '@mantine/core';
 import Image from 'next/image';
 import { IconArrowUpRight, IconBuildingStore, IconPackage, IconRulerMeasure, IconTruckDelivery } from '@tabler/icons-react';
 import Link from 'next/link';
-import { featuredProducts, homeCopy, projectSolutions } from '@/data/home.mock';
-import { catalogRepository } from '@/lib/catalog/repository';
+import { homeCopy, projectSolutions } from '@/data/home.mock';
+import { getCatalogues } from '@/lib/catalog/catalogues.server';
+import { getProducts } from '@/lib/catalog/products.server';
+import { ServerApiError } from '@/lib/api.server';
+import type { Product } from '@/types/catalog';
 import type { Category } from '@/types/catalog';
 import { HomeImage } from './HomeImage';
 import { homeImageSizes } from './image-sizes';
@@ -64,15 +67,23 @@ export function ProjectSolutions() {
   </Container></section>;
 }
 
-export function FeaturedProducts() {
+export async function FeaturedProducts() {
+  let products: Product[] = [];
+  let unavailable = false;
+  try {
+    products = (await getProducts({ filters: {}, sort: 'newest', page: 1, perPage: 8 })).products;
+  } catch (error) {
+    unavailable = true;
+    console.error('Featured Product API request failed', error instanceof ServerApiError ? error.status : 'unavailable');
+  }
   return <section className={styles.section} aria-labelledby="featured-title"><Container>
     <div className={styles.headingRow}><SectionHeading id="featured-title" copy={homeCopy.featured} /><Link href="/shop" className={styles.textLink}>Explore Collection <span aria-hidden="true">↗</span></Link></div>
-    <FeaturedProductsSlider products={featuredProducts} />
+    {unavailable ? <p role="alert">Featured products are temporarily unavailable. Please try again.</p> : products?.length ? <FeaturedProductsSlider products={products} /> : <p>No products are currently available.</p>}
   </Container></section>;
 }
 
 export async function HomeCatalogues() {
-  const homeCatalogues = await catalogRepository.getCatalogues();
+  const homeCatalogues = await getCatalogues();
   return <section className={`${styles.section} ${styles.softSection}`} aria-labelledby="catalogues-title"><Container>
     <div className={styles.headingRow}><SectionHeading id="catalogues-title" copy={homeCopy.catalogues} /><Link href="/catalogues" className={styles.button}>View Catalogues <IconArrowUpRight size={20} stroke={1.5} aria-hidden="true" /></Link></div>
     <HomeCataloguesSlider catalogues={homeCatalogues} />

@@ -14,7 +14,10 @@
     "test:product": "node tests/product-detail.test.cjs",
     "test:enquiry": "node tests/enquiry.test.cjs",
     "test:forms": "node --test tests/forms.test.cjs tests/enquiry-api.test.cjs",
-    "test:contacts": "node tests/contacts.test.cjs"
+    "test:contacts": "node tests/contacts.test.cjs",
+    "test:product-api": "node --test tests/product-api.test.cjs",
+    "test:solutions-enquiry": "node --test tests/solutions-enquiry-guard.test.cjs",
+    "test:product-actions-guard": "node --test tests/product-actions-guard.test.cjs"
   },
   "dependencies": {
     "@fancyapps/ui": "^6.1.15",

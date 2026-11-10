@@ -6,14 +6,15 @@ type Props = {
   sku?: string;
   name: string;
   specifications?: ProductSpecifications;
-  price: number | null;
+  specificationsText?: string;
+  price: number | string | null;
   sample?: boolean;
   heading: 'h2' | 'h3';
   classNames: { content: string; sku: string; name: string; specifications: string; footer: string; price: string; view: string };
 };
 
-export function ProductCardDetails({ sku, name, specifications, price, sample, heading, classNames: c }: Props) {
-  const formattedSpecifications = formatSpecifications(specifications);
+export function ProductCardDetails({ sku, name, specifications, specificationsText, price, sample, heading, classNames: c }: Props) {
+  const formattedSpecifications = specificationsText ?? formatSpecifications(specifications);
   const Heading = heading;
   return <div className={c.content}>
     {sku && <p className={c.sku}>Model: {sku}{sample ? ' · Sample' : ''}</p>}

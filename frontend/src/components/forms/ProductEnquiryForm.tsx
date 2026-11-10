@@ -23,7 +23,7 @@ function ProductForm({ product, quantity, source, onSubmit }: Props) {
         {!!product.specifications?.length && <dl>{product.specifications.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>}
       </div>
     </div>
-    <p className={`${styles.note} ${styles.compactNote}`}>Request a quote for this product. To enquire about several models, use Add to Enquiry and review your basket.</p>
+    <p className={`${styles.note} ${styles.compactNote}`}>Request a quote for this product. Adding products to your enquiry is temporarily unavailable, and online quote submission is not yet available.</p>
     <ContactFields form={form} compact showCompany={false} />
     <MessageField form={form} compact />
     <SubmissionFields form={form} label="Request a Quote" compact privacyNotice disabled unavailableMessage="Product enquiries will be available after BE-08 introduces verified product records." />

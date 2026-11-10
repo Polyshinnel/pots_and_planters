@@ -15,6 +15,11 @@ class EditProduct extends EditRecord
 {
     protected static string $resource = ProductResource::class;
 
+    protected function getAllRelationManagers(): array
+    {
+        return [];
+    }
+
     protected function getHeaderActions(): array
     {
         return [DeleteAction::make()->visible(false)];

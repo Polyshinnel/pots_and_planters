@@ -1,4 +1,4 @@
-import { featuredProducts } from './home.mock';
+import { featuredProducts } from './home-products.mock';
 import type { Product } from '@/types/catalog';
 
 export { categories } from '@/config/catalog';

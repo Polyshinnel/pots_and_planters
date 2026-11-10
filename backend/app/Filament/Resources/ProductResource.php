@@ -29,7 +29,10 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Livewire;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -54,6 +57,8 @@ class ProductResource extends Resource
     public static function form(Schema $schema): Schema
     {
         return $schema->components([
+            Tabs::make('Product details')->tabs([
+                Tab::make('Основные')->schema([
             Section::make('Product')->schema([
                 Select::make('brand_id')->label('Brand')->options(fn (?Product $record): array => Brand::query()
                     ->where(fn (Builder $query) => $query->where('is_active', true)->when($record, fn (Builder $query) => $query->orWhereKey($record->brand_id)))
@@ -111,6 +116,8 @@ class ProductResource extends Resource
                 ])->fileAttachments(false)->nullable()->columnSpanFull()
                     ->helperText('Supported formatting: paragraphs, H2/H3 headings, lists, bold, italic and inline links.'),
             ])->columnSpanFull(),
+                ])->columns(1),
+                Tab::make('SEO')->schema([
             Section::make('Search engine listing')->schema([
                 TextInput::make('slug')->label('Product slug')->required()->maxLength(255)->regex('/^[a-z0-9]+(?:-[a-z0-9]+)*$/')->unique(ignoreRecord: true)->live(onBlur: true)
                     ->helperText('Globally unique product URL segment. Once set, it is kept when the product name changes.'),
@@ -131,6 +138,8 @@ class ProductResource extends Resource
                     return rtrim((string) config('app.url'), '/').'/shop/'.$category->slug.'/'.$slug;
                 }, 'name')->columnSpanFull(),
             ])->columns(2)->columnSpanFull(),
+                ])->columns(1),
+                Tab::make('Attributes')->schema([
             Section::make('Product Attributes')->schema(function (Get $get, ?Product $record): array {
                 $typeId = $get('product_type_id');
                 if (! $typeId) {
@@ -151,7 +160,7 @@ class ProductResource extends Resource
                     $components[] = CheckboxList::make('selected_attribute_ids')->label('Use optional attributes')
                         ->options($optional->mapWithKeys(fn (Attribute $attribute): array => [$attribute->id => $attribute->name.($attribute->is_active ? '' : ' (inactive, existing assignment)')])->all())
                         ->default($previouslySelected)->live()->columns(2)->columnSpanFull()
-                        ->helperText('Selected attributes may be left empty. Clear a saved value before removing its selection.');
+                        ->helperText('Selected attributes may be left empty. Clear and save a filled attribute before removing it.');
                 }
 
                 $displayable = $assignments->filter(function (Attribute $attribute) use ($selectedIds, $saved): bool {
@@ -219,6 +228,13 @@ class ProductResource extends Resource
                         return $attribute->type === 'multiselect' ? $field->multiple()->live() : $field->placeholder('Not set')->nullable()->live();
                     })->values()->all()];
             })->columns(2)->columnSpanFull(),
+                ])->columns(1),
+                Tab::make('Images')->schema(fn (?Product $record): array => [
+            ...($record ? [Livewire::make(GalleryRelationManager::class, [
+                'ownerRecord' => $record,
+                'pageClass' => EditProduct::class,
+                ...GalleryRelationManager::getDefaultProperties(),
+            ])->key('product-gallery')] : []),
             Section::make('Product Gallery')->schema([
                 Repeater::make('gallery_uploads')->label('Images')->schema([
                     Hidden::make('media_key')->default(fn (): string => (string) Str::uuid()),
@@ -256,6 +272,8 @@ class ProductResource extends Resource
                     })->all())->searchable()->nullable()->live()
                     ->helperText('Choose the main image now. If left blank, the first image becomes main.'),
             ])->visible(fn (?Product $record): bool => $record === null),
+                ])->columns(1),
+            ])->columnSpanFull(),
         ]);
     }
 

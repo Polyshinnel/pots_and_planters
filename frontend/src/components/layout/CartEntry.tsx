@@ -7,6 +7,7 @@ import { useMediaQuery, useReducedMotion } from '@mantine/hooks';
 import { IconShoppingCart } from '@tabler/icons-react';
 import { usePathname } from 'next/navigation';
 import { useEnquiryV2 } from '@/lib/enquiry/store-v2';
+import { CartPreviewItems } from '@/components/enquiry/CartPreviewItems';
 import { ENQUIRY_PATH } from '@/lib/enquiry/domain';
 import cartStyles from '@/components/enquiry/Enquiry.module.css';
 import styles from './Layout.module.css';
@@ -26,7 +27,8 @@ export function CartEntry() {
     <p role="status">{hydrated ? `${totalQuantity} units in your enquiry` : 'Loading your selection…'}</p>
     {hydrated && (state.status === 'corrupt' || state.status === 'storage_unavailable'
       ? <p role="alert">Saved enquiry data needs attention.</p>
-      : totalQuantity ? <><p>{state.items.length} current catalogue items · {state.legacyItems.length} older saved items</p><Button component={Link} href={ENQUIRY_PATH} fullWidth onClick={close}>Review Enquiry</Button></>
+      : totalQuantity ? <><CartPreviewItems opened={opened} />
+        <Button component={Link} href={ENQUIRY_PATH} fullWidth onClick={close}>Review Enquiry</Button></>
         : <p>Your enquiry is empty.</p>)}
   </div>;
   const toggle = <button ref={trigger} type="button" className={`${styles.headerIconButton} ${styles.cartEntry}`} title="Your Enquiry"

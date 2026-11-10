@@ -2,12 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\DeliverEnquiryToTelegram;
 use App\Models\EnquiryDelivery;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 class DispatchEnquiryNotifications extends Command
 {
@@ -26,31 +22,8 @@ class DispatchEnquiryNotifications extends Command
 
         $queued = 0;
         foreach ($deliveries as $id) {
-            $reserved = DB::transaction(function () use ($id): bool {
-                $delivery = EnquiryDelivery::query()->whereKey($id)->lockForUpdate()->first();
-                if (! $delivery || $delivery->dispatch_after_at?->isFuture()) {
-                    return false;
-                }
-                $eligible = ($delivery->status === 'pending' && (! $delivery->next_attempt_at || $delivery->next_attempt_at->isPast()))
-                    || ($delivery->status === 'sending' && (! $delivery->lease_expires_at || $delivery->lease_expires_at->isPast()));
-                if (! $eligible) {
-                    return false;
-                }
-                $delivery->update(['dispatch_after_at' => now()->addSeconds(120)]);
-
-                return true;
-            });
-            if (! $reserved) {
-                continue;
-            }
-            try {
-                DeliverEnquiryToTelegram::dispatch((int) $id);
+            if (app(\App\Services\EnquiryNotificationDispatcher::class)->dispatch((int) $id)) {
                 $queued++;
-            } catch (Throwable) {
-                // MariaDB remains the source of truth; a later scheduler tick will retry this dispatch.
-                EnquiryDelivery::query()->whereKey($id)->update(['dispatch_after_at' => null]);
-                Log::warning('Telegram outbox dispatch failed; delivery remains available for recovery.', ['delivery_id' => (int) $id]);
-                break;
             }
         }
 

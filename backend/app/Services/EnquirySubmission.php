@@ -118,12 +118,15 @@ class EnquirySubmission
                 ]);
 
                 foreach ($recipients as $recipient) {
-                    $event->deliveries()->create([
+                    $delivery = $event->deliveries()->create([
                         'recipient_id' => $recipient->id,
                         'chat_id_snapshot' => $recipient->chat_id,
                         'recipient_name_snapshot' => $recipient->name,
                         'status' => 'pending',
                     ]);
+
+                    // Publish only after the enquiry and its durable outbox have committed.
+                    DB::afterCommit(fn () => app(EnquiryNotificationDispatcher::class)->dispatch((int) $delivery->id));
                 }
 
                 EnquiryIdempotencyKey::query()->create([

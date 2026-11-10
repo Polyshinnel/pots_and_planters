@@ -35,7 +35,7 @@ export function CartPreviewItems({ opened }: { opened: boolean }) {
   if (failed) return <div role="alert"><p>We couldn't load product details.</p><Button size="compact-sm" variant="subtle" onClick={() => setRetry((value) => value + 1)}>Retry</Button></div>;
   if (!resolved) return <p role="status">Loading product details…</p>;
 
-  const canEdit = featureEnabled && state.persistent && state.hydrated && !state.v1Corrupt && !state.v2Corrupt;
+  const canEdit = featureEnabled && state.persistent && state.hydrated && !state.v2Corrupt;
   const edit = (operation: () => ReturnType<typeof enquiryStoreV2.setQuantity>) => {
     setError('');
     const result = operation();

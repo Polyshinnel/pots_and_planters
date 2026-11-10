@@ -70,6 +70,59 @@ class EnquiryDeliveryAndDownloadsTest extends TestCase
         return [$response, $payload];
     }
 
+    public function test_submission_queues_immediately_after_commit_without_scheduler_and_replay_does_not_duplicate(): void
+    {
+        $this->settings();
+        \App\Models\TelegramRecipient::query()->create(['name' => 'Sales', 'chat_id' => '-1001234567890', 'enabled' => true]);
+        Bus::fake();
+        $payload = ['type' => 'contact', 'name' => 'Taylor Example', 'phone' => '+971500000000', 'email' => 'taylor@example.com', 'message' => 'Please call.'];
+
+        $this->withHeader('Idempotency-Key', 'immediate-contact-0001')->postJson('/api/v1/enquiries', $payload)->assertCreated();
+
+        $delivery = EnquiryDelivery::query()->firstOrFail();
+        Bus::assertDispatched(DeliverEnquiryToTelegram::class, fn ($job) => $job->deliveryId === $delivery->id);
+        $this->assertNotNull($delivery->dispatch_after_at);
+        $this->withHeader('Idempotency-Key', 'immediate-contact-0001')->postJson('/api/v1/enquiries', $payload)->assertOk();
+        $this->artisan('enquiries:dispatch-telegram')->assertSuccessful();
+        Bus::assertDispatched(DeliverEnquiryToTelegram::class, 1);
+    }
+
+    public function test_rolled_back_submission_never_publishes_a_delivery(): void
+    {
+        $this->settings();
+        \App\Models\TelegramRecipient::query()->create(['name' => 'Sales', 'chat_id' => '-1001234567890', 'enabled' => true]);
+        Bus::fake();
+        DB::beginTransaction();
+        try {
+            app(\App\Services\EnquirySubmission::class)->submit([
+                'type' => 'contact', 'name' => 'Taylor Example', 'phone' => '+971500000000',
+                'email' => 'taylor@example.com', 'message' => 'Please call.',
+            ], 'rollback-contact-00001');
+            Bus::assertNothingDispatched();
+        } finally {
+            DB::rollBack();
+        }
+        Bus::assertNothingDispatched();
+        $this->assertDatabaseCount('enquiries', 0);
+        $this->assertDatabaseCount('enquiry_deliveries', 0);
+    }
+
+    public function test_submission_survives_queue_outage_and_scheduler_recovers_delivery(): void
+    {
+        $this->settings();
+        \App\Models\TelegramRecipient::query()->create(['name' => 'Sales', 'chat_id' => '-1001234567890', 'enabled' => true]);
+        Bus::shouldReceive('dispatch')->once()->andThrow(new \RuntimeException('redis unavailable'));
+        $payload = ['type' => 'contact', 'name' => 'Taylor Example', 'phone' => '+971500000000', 'email' => 'taylor@example.com', 'message' => 'Please call.'];
+        $this->withHeader('Idempotency-Key', 'outage-contact-000001')->postJson('/api/v1/enquiries', $payload)->assertCreated();
+        $delivery = EnquiryDelivery::query()->firstOrFail();
+        $this->assertSame('pending', $delivery->status);
+        $this->assertNull($delivery->dispatch_after_at);
+
+        Bus::fake();
+        $this->artisan('enquiries:dispatch-telegram')->assertSuccessful();
+        Bus::assertDispatched(DeliverEnquiryToTelegram::class, fn ($job) => $job->deliveryId === $delivery->id);
+    }
+
     public function test_dispatcher_queues_each_due_recipient_and_rechecks_database_after_queue_outage(): void
     {
         $enquiry = $this->enquiry();

@@ -6,11 +6,11 @@ import type { LeadFormState } from './useLeadForm';
 import { enquirySubmissionsEnabled } from '@/lib/forms/enquiries.client';
 import styles from './Forms.module.css';
 
-export function ContactFields({ form, companyLabel = 'Company / Project name', compact = false, showCompany = true }: { form: LeadFormState; companyLabel?: string; compact?: boolean; showCompany?: boolean }) {
+export function ContactFields({ form, companyLabel = 'Company / Project name', compact = false, showCompany = true, phoneMaxLength = fieldLimits.phone }: { form: LeadFormState; companyLabel?: string; compact?: boolean; showCompany?: boolean; phoneMaxLength?: number }) {
   const { values, errors, change, pending } = form;
   return <div className={`${styles.fields}${compact ? ` ${styles.compactFields}` : ''}`}>
     <TextInput label="Full name" name="name" required autoComplete="name" maxLength={fieldLimits.name} size={compact ? 'sm' : 'md'} disabled={pending} value={values.name} onChange={(event) => change('name', event.currentTarget.value)} error={errors.name} />
-    <TextInput label="Phone" name="phone" type="tel" required autoComplete="tel" maxLength={fieldLimits.phone} description="Include your country code for international enquiries." size={compact ? 'sm' : 'md'} disabled={pending} value={values.phone} onChange={(event) => change('phone', event.currentTarget.value)} error={errors.phone} />
+    <TextInput label="Phone" name="phone" type="tel" required autoComplete="tel" maxLength={phoneMaxLength} description="Include your country code for international enquiries." size={compact ? 'sm' : 'md'} disabled={pending} value={values.phone} onChange={(event) => change('phone', event.currentTarget.value)} error={errors.phone} />
     <TextInput label="Email" name="email" type="email" required autoComplete="email" maxLength={fieldLimits.email} size={compact ? 'sm' : 'md'} disabled={pending} value={values.email} onChange={(event) => change('email', event.currentTarget.value)} error={errors.email} />
     {showCompany && <TextInput label={companyLabel} name="company" autoComplete="organization" maxLength={fieldLimits.company} size={compact ? 'sm' : 'md'} disabled={pending} value={values.company} onChange={(event) => change('company', event.currentTarget.value)} error={errors.company} />}
   </div>;

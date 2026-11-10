@@ -15,7 +15,7 @@ import styles from './Layout.module.css';
 export function CartEntry() {
   const state = useEnquiryV2();
   const hydrated = state.hydrated;
-  const totalQuantity = state.items.reduce((total, item) => total + item.quantity, 0) + state.legacyItems.reduce((total, item) => total + item.quantity, 0);
+  const totalQuantity = state.items.reduce((total, item) => total + item.quantity, 0);
   const [opened, setOpened] = useState(false);
   const mobile = useMediaQuery('(max-width: 47.999em)');
   const reducedMotion = useReducedMotion();

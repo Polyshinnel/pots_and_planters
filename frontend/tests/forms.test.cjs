@@ -23,6 +23,13 @@ test('required fields, whitespace, email, international phones and lengths', () 
   for (const phone of ['123', '++123456789', '12+3456789', 'phone1234567', '1'.repeat(16)]) assert.ok(validateLead({ ...values, phone }, 'contact').phone);
   for (const [field, max] of [['name', 200], ['email', 254], ['phone', 60], ['company', 200], ['message', 5000]]) assert.ok(validateLead({ ...values, [field]: 'x'.repeat(max + 1) }, 'contact')[field]);
 });
+
+test('Product Enquiry phone accepts the approved 64 character limit without widening Contact', () => {
+  const phone = `1${' '.repeat(49)}23456789012345`;
+  assert.equal(phone.length, 64);
+  assert.equal(validateLead({ ...values, phone }, 'product_enquiry', '1', 64).phone, undefined);
+  assert.ok(validateLead({ ...values, phone }, 'contact').phone);
+});
 test('optional message/company and boundary sanitization produce minimal immutable snapshots', () => {
   const payload = buildContactPayload(values, { pagePath: '/contacts?email=secret#fragment', placement: ' contact ' });
   assert.equal(payload.type, 'contact');

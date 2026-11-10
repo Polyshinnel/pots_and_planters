@@ -20,6 +20,11 @@ x-dev-php: &dev-php
 services:
   backend:
     <<: *dev-php
+    environment:
+      APP_ENV: local
+      APP_DEBUG: 'true'
+      PRODUCT_ENQUIRIES_ENABLED: 'true'
+      CART_ENQUIRIES_ENABLED: 'true'
   horizon:
     <<: *dev-php
   scheduler:
@@ -32,6 +37,8 @@ services:
       NODE_ENV: development
       NEXT_PUBLIC_ENQUIRIES_ENABLED: 'true'
       NEXT_PUBLIC_PRODUCT_ENQUIRIES_ENABLED: 'true'
+      NEXT_PUBLIC_PRODUCT_ENQUIRY_SUBMIT_ENABLED: 'true'
+      NEXT_PUBLIC_CART_ENQUIRY_SUBMIT_ENABLED: 'true'
       WATCHPACK_POLLING: 'true'
     volumes:
       - ./frontend/src:/app/src:ro

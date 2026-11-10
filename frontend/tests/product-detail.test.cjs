@@ -67,15 +67,3 @@ test('WhatsApp uses config, encoding, SKU, quantity and absolute URL', () => {
   assert.equal(url.pathname, '/971500000000');
   for (const text of ['A & B / planter', 'Model: 25526', 'quantity: 3', 'https://example.test/shop/outdoor-pots/coral-planter-25526']) assert.ok(url.searchParams.get('text').includes(text));
 });
-test('shared store persists and keeps selection in memory when storage fails', () => {
-  let saved = null;
-  global.window = { localStorage: { getItem: () => null, setItem: (_key, value) => { saved = value; } } };
-  const { enquiryStore } = require('../src/lib/enquiry/store.ts');
-  assert.equal(enquiryStore.addItem(item.productId, item.sku, 2).persistent, true);
-  assert.equal(enquiryStore.getTotalQuantity(), 2);
-  assert.equal(readEnquiry(saved)[0].quantity, 2);
-  window.localStorage.setItem = () => { throw new Error('Blocked'); };
-  assert.equal(enquiryStore.addItem(item.productId, item.sku, 1).persistent, false);
-  assert.equal(enquiryStore.getItems()[0].quantity, 3);
-  delete global.window;
-});

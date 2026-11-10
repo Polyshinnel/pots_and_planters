@@ -25,11 +25,10 @@ function sumKnownPrices(lines: readonly ResolvedLine[]): { value: string; hasUnp
   return { value: formatted, hasUnpriced: priced.length !== lines.length, hasPriced: priced.length > 0 };
 }
 
-export function ResolvedCart() {
+export function ResolvedCart({ pending = false, unavailable = [] }: { pending?: boolean; unavailable?: string[] }) {
   const state = useEnquiryV2();
   const [resolved, setResolved] = useState<ResolvedLine[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [removeError, setRemoveError] = useState('');
   const [editError, setEditError] = useState('');
   const [retry, setRetry] = useState(0);
   const identity = useMemo(() => state.items.map(({ productId }) => productId).join('|'), [state.items]);
@@ -43,7 +42,7 @@ export function ResolvedCart() {
 
   if (!state.hydrated) return <p role="status">Loading your saved enquiry items…</p>;
   const hasProblem = state.status === 'corrupt' || state.status === 'storage_unavailable';
-  const canEdit = process.env.NEXT_PUBLIC_PRODUCT_ENQUIRIES_ENABLED === 'true' && state.hydrated && state.persistent && !hasProblem;
+  const canEdit = !pending && process.env.NEXT_PUBLIC_PRODUCT_ENQUIRIES_ENABLED === 'true' && state.hydrated && state.persistent && !hasProblem;
   const edit = (operation: () => ReturnType<typeof enquiryStoreV2.setQuantity>) => {
     setEditError('');
     const result = operation();
@@ -54,7 +53,7 @@ export function ResolvedCart() {
     const result = enquiryStoreV2.remove(productId);
     if (!result.ok) setEditError(result.code === 'corrupt' ? 'Saved enquiry data needs recovery before it can be changed.' : 'This item could not be removed from browser storage.');
   };
-  const empty = !state.items.length && !state.legacyItems.length;
+  const empty = !state.items.length;
   const totals = resolved ? sumKnownPrices(resolved) : null;
   return <>
     {state.status === 'storage_unavailable' && <p role="alert">Browser storage is unavailable. Your saved enquiry state cannot be reliably read or saved.</p>}
@@ -73,7 +72,7 @@ export function ResolvedCart() {
             {line.status === 'unavailable' && <p className={styles.detail}>Quantity: {quantity}</p>}
             <Button variant="subtle" color="gray" disabled={!canEdit} leftSection={<IconTrash size={17} aria-hidden="true" />} onClick={() => remove(line.item.productId)}>Remove</Button>
           </div>;
-          return line.status === 'unavailable'
+          return (line.status === 'unavailable' || unavailable.includes(line.item.productId))
           ? <li key={line.item.productId} className={styles.item}><div className={styles.thumbnail}><span>No image</span></div><div className={styles.itemBody}><strong>This product is no longer available</strong>{controls}</div></li>
           : <li key={line.item.productId} className={styles.item}>
             <div className={styles.thumbnail}>{line.product.cardImage ? <img src={line.product.cardImage.url} alt={line.product.cardImage.alt} width={96} height={96} loading="lazy" /> : <span>No image</span>}</div>
@@ -90,12 +89,7 @@ export function ResolvedCart() {
       </div>}
       {editError && <p role="alert">{editError}</p>}
     </section>}
-    {state.legacyItems.length > 0 && <section aria-labelledby="legacy-items"><h2 id="legacy-items">Older saved items</h2><p>These items have not been matched to the current catalogue.</p><ul className={styles.items}>{state.legacyItems.map((item) => <li key={item.sourceIndex} className={styles.item}>
-      <div className={styles.itemBody}><strong>SKU: {item.sku}</strong><p className={styles.detail}>Quantity: {item.quantity}</p><p className={styles.detail}>This saved item is from an older enquiry list and needs to be added again from the current catalogue.</p>
-        <Button variant="subtle" color="gray" disabled={state.v1Corrupt || !state.persistent || hasProblem} onClick={() => { setRemoveError(''); const result = enquiryStoreV2.removeLegacyAt(item.sourceIndex); if (!result.ok) setRemoveError(result.code === 'storage_unavailable' ? 'This saved item could not be removed because browser storage could not save the change.' : 'This saved item could not be safely removed because the saved data needs recovery.'); }}>Remove this saved item</Button>
-        {removeError && <p role="alert">{removeError}</p>}
-      </div></li>)}</ul></section>}
     {empty && !hasProblem && <div className={styles.empty}><p>Your enquiry is empty</p><Button component={Link} href="/shop">Explore Products</Button></div>}
-    {!state.items.length && !state.legacyItems.length && hasProblem && <p role="status">Saved items cannot be safely displayed.</p>}
+    {!state.items.length && hasProblem && <p role="status">Saved items cannot be safely displayed.</p>}
   </>;
 }
